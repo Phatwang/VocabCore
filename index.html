@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabcore – Học từ vựng thông minh</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --green:   #809671;
+    --cream:   #E5D2B8;
+    --brown:   #725C3A;
+    --green-dk:#5f7153;
+    --green-lt:#a8bc98;
+    --cream-dk:#cbb99d;
+    --brown-lt:#9a7d56;
+    --bg:      #f5efe6;
+    --card:    #fffdf8;
+    --text:    #3b2e1e;
+    --muted:   #8a7560;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--cream); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: var(--green); border-radius: 3px; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+    background: linear-gradient(180deg, var(--brown) 0%, #4a3a23 100%);
+    z-index: 100; display: flex; flex-direction: column;
+    box-shadow: 4px 0 24px rgba(0,0,0,.18);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  #sidebar.collapsed { transform: translateX(-240px); }
+
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-logo .logo-text {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+    color: var(--cream); line-height: 1;
+  }
+  .sidebar-logo .logo-sub {
+    font-size: 10px; color: var(--green-lt); letter-spacing: 2px;
+    text-transform: uppercase; margin-top: 3px;
+  }
+
+  .nav-section { padding: 16px 12px 8px; }
+  .nav-label {
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(229,210,184,.4); padding: 0 12px; margin-bottom: 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 10px; cursor: pointer;
+    color: rgba(229,210,184,.7); font-size: 14px; font-weight: 500;
+    transition: all .2s; margin-bottom: 2px; border: none; background: none;
+    width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.08); color: var(--cream); }
+  .nav-item.active {
+    background: var(--green); color: #fff;
+    box-shadow: 0 4px 16px rgba(128,150,113,.4);
+  }
+  .nav-item .nav-icon { font-size: 18px; min-width: 22px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; background: var(--green-lt); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+  }
+  .nav-item.active .nav-badge { background: rgba(255,255,255,.3); }
+
+  .sidebar-footer {
+    margin-top: auto; padding: 16px 12px;
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+
+  /* ── MAIN ── */
+  #main {
+    margin-left: 240px;
+    min-height: 100vh;
+    transition: margin-left .3s cubic-bezier(.4,0,.2,1);
+  }
+  #main.expanded { margin-left: 0; }
+
+  /* ── TOPBAR ── */
+  #topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(245,239,230,.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--cream-dk);
+    padding: 14px 28px; display: flex; align-items: center; gap: 16px;
+  }
+  #toggle-sidebar {
+    background: none; border: none; cursor: pointer; padding: 6px;
+    color: var(--brown); font-size: 20px; border-radius: 8px;
+    transition: background .2s;
+  }
+  #toggle-sidebar:hover { background: var(--cream); }
+  .topbar-title { font-size: 18px; font-weight: 700; color: var(--brown); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .today-date { font-size: 13px; color: var(--muted); }
+
+  /* ── PAGE ── */
+  .page { display: none; padding: 28px; animation: fadeIn .25s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card); border-radius: 16px;
+    border: 1px solid var(--cream-dk);
+    box-shadow: 0 2px 16px rgba(114,92,58,.07);
+    padding: 20px;
+  }
+  .card-sm { padding: 16px; }
+  .card-lg { padding: 28px; }
+
+  /* ── STAT TILES ── */
+  .stat-tile {
+    background: var(--card); border-radius: 14px;
+    border: 1px solid var(--cream-dk);
+    padding: 18px; display: flex; flex-direction: column; gap: 6px;
+    box-shadow: 0 2px 10px rgba(114,92,58,.06);
+  }
+  .stat-tile .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .stat-tile .value { font-size: 32px; font-weight: 800; color: var(--brown); line-height: 1; }
+  .stat-tile .sub { font-size: 12px; color: var(--muted); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    border: none; border-radius: 10px; font-family: inherit;
+    font-weight: 600; font-size: 14px; transition: all .2s; padding: 10px 18px;
+  }
+  .btn-primary { background: var(--green); color: #fff; box-shadow: 0 3px 12px rgba(128,150,113,.35); }
+  .btn-primary:hover { background: var(--green-dk); box-shadow: 0 4px 18px rgba(128,150,113,.5); transform: translateY(-1px); }
+  .btn-secondary { background: var(--cream); color: var(--brown); }
+  .btn-secondary:hover { background: var(--cream-dk); }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-ghost { background: transparent; color: var(--brown); border: 1.5px solid var(--cream-dk); }
+  .btn-ghost:hover { background: var(--cream); }
+  .btn-sm { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
+  .btn-lg { padding: 14px 28px; font-size: 16px; border-radius: 12px; }
+  .btn-icon { padding: 8px; border-radius: 8px; }
+
+  /* ── INPUT ── */
+  .input {
+    width: 100%; border: 1.5px solid var(--cream-dk); border-radius: 10px;
+    padding: 10px 14px; font-family: inherit; font-size: 14px;
+    background: var(--card); color: var(--text); outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(128,150,113,.15); }
+  textarea.input { resize: vertical; min-height: 80px; }
+  select.input { cursor: pointer; }
+  .input-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: .8px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    backdrop-filter: blur(4px); z-index: 1000;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 20px; width: 100%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,.25);
+    animation: modalIn .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .modal-wide { max-width: 760px; }
+  @keyframes modalIn { from { opacity:0; transform: scale(.92) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
+  .modal-header {
+    padding: 22px 24px 16px; border-bottom: 1px solid var(--cream-dk);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; color: var(--brown); }
+  .modal-close { background: none; border: none; cursor: pointer; font-size: 22px; color: var(--muted); line-height: 1; border-radius: 6px; padding: 4px 8px; transition: all .15s; }
+  .modal-close:hover { background: var(--cream); color: var(--brown); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { padding: 16px 24px 22px; display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* ── STREAK ── */
+  .streak-fire { font-size: 64px; animation: pulse 2s infinite; display: inline-block; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  .streak-ring {
+    width: 140px; height: 140px; border-radius: 50%;
+    background: conic-gradient(var(--green) 0%, var(--cream-dk) 0%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; box-shadow: 0 0 0 6px var(--cream);
+  }
+  .streak-ring-inner {
+    width: 112px; height: 112px; border-radius: 50%;
+    background: var(--card); display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+  .cal-day {
+    aspect-ratio: 1; border-radius: 7px; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 600;
+    transition: all .15s;
+  }
+  .cal-day.done { background: var(--green); color: #fff; }
+  .cal-day.today { background: var(--brown); color: #fff; box-shadow: 0 0 0 2px var(--cream-dk); }
+  .cal-day.missed { background: #f0ebe3; color: var(--muted); }
+  .cal-day.future { background: transparent; color: #ccc; border: 1px dashed #ddd; }
+  .cal-day.header { background: transparent; color: var(--muted); font-size: 10px; letter-spacing: .5px; }
+  .week-bar { display: flex; gap: 5px; margin-top: 6px; }
+  .week-dot {
+    flex: 1; height: 8px; border-radius: 4px;
+    background: var(--cream-dk); transition: background .2s;
+  }
+  .week-dot.done { background: var(--green); }
+  .week-dot.today { background: var(--brown); }
+
+  /* ── TIMER ── */
+  .timer-circle {
+    width: 220px; height: 220px; border-radius: 50%;
+    background: conic-gradient(var(--green) var(--progress, 0%), var(--cream-dk) 0%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 8px var(--cream), 0 8px 40px rgba(128,150,113,.2);
+    margin: 0 auto;
+  }
+  .timer-inner {
+    width: 180px; height: 180px; border-radius: 50%;
+    background: var(--card); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+  }
+  .timer-display { font-size: 42px; font-weight: 800; color: var(--brown); letter-spacing: -1px; }
+  .timer-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .session-list { list-style: none; }
+  .session-list li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--cream-dk);
+    font-size: 13px;
+  }
+  .session-list li:last-child { border-bottom: none; }
+
+  /* ── STATS CHART ── */
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; }
+  .bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .bar {
+    width: 100%; border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, var(--green) 0%, var(--green-dk) 100%);
+    min-height: 4px; transition: height .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .bar.secondary { background: linear-gradient(180deg, var(--cream-dk) 0%, #bba88a 100%); }
+  .bar-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+  .bar-val { font-size: 11px; color: var(--brown); font-weight: 700; }
+  .progress-bar-wrap { background: var(--cream-dk); border-radius: 20px; height: 10px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--green), var(--green-lt)); transition: width .5s ease; }
+
+  /* ── DECK ── */
+  .deck-card {
+    background: var(--card); border-radius: 14px; border: 1.5px solid var(--cream-dk);
+    padding: 18px; cursor: pointer; transition: all .2s;
+    display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden;
+  }
+  .deck-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: var(--green);
+  }
+  .deck-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(114,92,58,.12); border-color: var(--green-lt); }
+  .deck-name { font-size: 16px; font-weight: 700; color: var(--brown); }
+  .deck-meta { display: flex; gap: 12px; }
+  .deck-chip {
+    background: var(--cream); color: var(--brown); font-size: 11px;
+    font-weight: 600; padding: 3px 10px; border-radius: 20px;
+  }
+  .deck-chip.due { background: rgba(128,150,113,.2); color: var(--green-dk); }
+  .deck-chip.new { background: rgba(114,92,58,.12); color: var(--brown); }
+  .deck-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+  /* ── FLASHCARD ── */
+  .fc-scene { perspective: 1000px; width: 100%; max-width: 480px; height: 280px; margin: 0 auto; cursor: pointer; }
+  .fc-card {
+    width: 100%; height: 100%; position: relative;
+    transform-style: preserve-3d; transition: transform .6s cubic-bezier(.4,0,.2,1);
+    border-radius: 20px;
+  }
+  .fc-card.flipped { transform: rotateY(180deg); }
+  .fc-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 20px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+    padding: 28px; box-shadow: 0 8px 40px rgba(114,92,58,.15);
+    border: 1.5px solid var(--cream-dk);
+  }
+  .fc-front { background: linear-gradient(135deg, #fff 0%, var(--cream) 100%); }
+  .fc-back  { background: linear-gradient(135deg, var(--green) 0%, var(--green-dk) 100%); transform: rotateY(180deg); color: #fff; }
+  .fc-word  { font-size: 32px; font-weight: 800; text-align: center; color: var(--brown); }
+  .fc-phonetic { font-size: 16px; color: var(--muted); font-style: italic; }
+  .fc-back .fc-word { color: #fff; }
+  .fc-back .fc-phonetic { color: rgba(255,255,255,.7); }
+  .fc-back .fc-meaning { color: rgba(255,255,255,.9); text-align: center; font-size: 15px; line-height: 1.6; }
+  .fc-image { max-height: 80px; max-width: 100%; border-radius: 8px; object-fit: cover; }
+  .fc-audio-btn {
+    background: rgba(255,255,255,.2); border: none; border-radius: 8px;
+    color: #fff; padding: 6px 12px; cursor: pointer; font-size: 18px;
+    transition: background .2s;
+  }
+  .fc-audio-btn:hover { background: rgba(255,255,255,.35); }
+  .rating-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .rating-btn {
+    flex: 1; min-width: 80px; border: none; border-radius: 12px;
+    padding: 12px 8px; cursor: pointer; font-family: inherit; font-weight: 700;
+    font-size: 13px; transition: all .2s; display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+  }
+  .rating-btn .next-label { font-size: 10px; font-weight: 400; opacity: .8; }
+  .rating-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.15); }
+  .rb-again { background: #e74c3c; color: #fff; }
+  .rb-hard  { background: #e67e22; color: #fff; }
+  .rb-good  { background: var(--green); color: #fff; }
+  .rb-easy  { background: var(--brown); color: #fff; }
+
+  /* ── WORD LIST ── */
+  .word-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 10px; transition: background .15s;
+    border-bottom: 1px solid var(--cream-dk);
+  }
+  .word-row:hover { background: var(--cream); }
+  .word-row:last-child { border-bottom: none; }
+  .word-row .word { font-weight: 700; font-size: 15px; color: var(--brown); min-width: 120px; }
+  .word-row .meaning { font-size: 13px; color: var(--muted); flex: 1; }
+  .word-row .srs-tag {
+    font-size: 10px; font-weight: 600; padding: 3px 8px;
+    border-radius: 20px; white-space: nowrap;
+  }
+  .tag-new    { background: #e8f5e9; color: #388e3c; }
+  .tag-learn  { background: #fff3e0; color: #f57c00; }
+  .tag-review { background: #e3f2fd; color: #1976d2; }
+  .tag-mature { background: rgba(128,150,113,.15); color: var(--green-dk); }
+
+  /* ── TABS (deck内) ── */
+  .sub-tabs { display: flex; gap: 6px; padding: 4px; background: var(--cream); border-radius: 10px; }
+  .sub-tab {
+    flex: 1; padding: 8px 14px; border-radius: 7px; border: none;
+    background: none; font-family: inherit; font-size: 13px; font-weight: 600;
+    color: var(--muted); cursor: pointer; transition: all .2s;
+  }
+  .sub-tab.active { background: var(--card); color: var(--brown); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+
+  /* ── TOAST ── */
+  #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--brown); color: var(--cream); padding: 12px 18px; border-radius: 10px;
+    font-size: 13px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,.2);
+    animation: toastIn .3s ease; display: flex; align-items: center; gap: 10px;
+    max-width: 300px;
+  }
+  .toast.success { background: var(--green); }
+  .toast.error   { background: #e74c3c; }
+  @keyframes toastIn { from { opacity:0; transform: translateX(40px); } to { opacity:1; transform: translateX(0); } }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+  .empty-state .icon { font-size: 56px; margin-bottom: 14px; }
+  .empty-state .title { font-size: 18px; font-weight: 700; color: var(--brown); margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; margin-bottom: 18px; }
+
+  /* ── CHIP ROW ── */
+  .chip { display: inline-block; background: var(--cream); color: var(--brown); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+  .chip-green { background: rgba(128,150,113,.15); color: var(--green-dk); }
+
+  /* ── GRID HELPERS ── */
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  /* ── SRS PROGRESS DOT ── */
+  .srs-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .srs-dot.new    { background: #66bb6a; }
+  .srs-dot.learn  { background: #ffa726; }
+  .srs-dot.review { background: #42a5f5; }
+  .srs-dot.mature { background: var(--green); }
+
+  /* ── STUDY SCREEN ── */
+  .study-header {
+    display: flex; align-items: center; gap: 16px; padding: 16px 28px;
+    background: var(--card); border-bottom: 1px solid var(--cream-dk);
+    position: sticky; top: 57px; z-index: 40;
+  }
+  .study-progress-bar { flex: 1; height: 8px; background: var(--cream-dk); border-radius: 4px; overflow: hidden; }
+  .study-progress-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width .4s ease; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    #sidebar { width: 220px; transform: translateX(-220px); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0 !important; }
+    .g2, .g3, .g4 { grid-template-columns: 1fr; }
+    .page { padding: 16px; }
+    .fc-scene { height: 240px; }
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title { font-size: 20px; font-weight: 800; color: var(--brown); margin-bottom: 4px; }
+  .section-sub   { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+  /* ── DIVIDER ── */
+  .divider { border: none; border-top: 1px solid var(--cream-dk); margin: 16px 0; }
+
+  /* ── IMAGE PREVIEW ── */
+  .img-preview { width: 100%; height: 120px; border-radius: 10px; object-fit: cover; border: 1.5px solid var(--cream-dk); }
+
+  /* ── TAB CONTENT ── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── HEATMAP ── */
+  .heatmap { display: flex; gap: 3px; flex-wrap: wrap; }
+  .hm-cell {
+    width: 14px; height: 14px; border-radius: 3px; background: var(--cream-dk);
+    transition: background .2s; cursor: default;
+  }
+  .hm-cell.l1 { background: rgba(128,150,113,.3); }
+  .hm-cell.l2 { background: rgba(128,150,113,.55); }
+  .hm-cell.l3 { background: rgba(128,150,113,.8); }
+  .hm-cell.l4 { background: var(--green); }
+
+  /* ── ICON BADGE ── */
+  .icon-badge {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .ib-green { background: rgba(128,150,113,.15); }
+  .ib-brown { background: rgba(114,92,58,.1); }
+  .ib-cream { background: var(--cream); }
+
+  /* study overlay */
+  #study-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    z-index: 200; display: none; flex-direction: column; overflow-y: auto;
+  }
+  #study-overlay.open { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">📖 Vocabcore</div>
+    <div class="logo-sub">Spaced Repetition</div>
+  </div>
+
+  <nav class="nav-section">
+    <div class="nav-label">Học tập</div>
+    <button class="nav-item active" data-page="home">
+      <span class="nav-icon">🏠</span> Tổng quan
+    </button>
+    <button class="nav-item" data-page="streak">
+      <span class="nav-icon">🔥</span> Streak
+      <span class="nav-badge" id="nav-streak">0</span>
+    </button>
+    <button class="nav-item" data-page="timer">
+      <span class="nav-icon">⏱️</span> Thời gian học
+    </button>
+  </nav>
+
+  <nav class="nav-section">
+    <div class="nav-label">Từ vựng</div>
+    <button class="nav-item" data-page="decks">
+      <span class="nav-icon">📚</span> Thư mục (Deck)
+      <span class="nav-badge" id="nav-decks">0</span>
+    </button>
+    <button class="nav-item" data-page="stats">
+      <span class="nav-icon">📊</span> Thống kê
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="nav-item" data-page="settings">
+      <span class="nav-icon">⚙️</span> Cài đặt
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <button id="toggle-sidebar">☰</button>
+    <span class="topbar-title" id="page-title">Tổng quan</span>
+    <div class="topbar-right">
+      <span class="today-date" id="today-display"></span>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--cream);padding:6px 12px;border-radius:20px;">
+        <span>🔥</span>
+        <span style="font-weight:700;font-size:14px;color:var(--brown)" id="topbar-streak">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: HOME ══ -->
+  <div class="page active" id="page-home">
+    <div class="section-title">Chào buổi sáng! 🌿</div>
+    <div class="section-sub">Sẵn sàng học từ vựng hôm nay chưa?</div>
+
+    <!-- Quick Stats -->
+    <div class="g4" style="margin-bottom:20px;">
+      <div class="stat-tile">
+        <div class="label">🔥 Streak</div>
+        <div class="value" id="home-streak">0</div>
+        <div class="sub">ngày liên tiếp</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label">📅 Cần ôn hôm nay</div>
+        <div class="value" id="home-due">0</div>
+        <div class="sub">thẻ đến hạn</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label">✅ Đã học hôm nay</div>
+        <div class="value" id="home-done">0</div>
+        <div class="sub">thẻ hoàn thành</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label">📚 Tổng từ vựng</div>
+        <div class="value" id="home-total">0</div>
+        <div class="sub">từ trong thư viện</div>
+      </div>
+    </div>
+
+    <div class="g2" style="margin-bottom:20px;">
+      <!-- Due decks -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-weight:700;font-size:16px;color:var(--brown);">📚 Deck cần ôn</div>
+          <button class="btn btn-sm btn-ghost" onclick="navigate('decks')">Xem tất cả</button>
+        </div>
+        <div id="home-deck-list">
+          <div class="empty-state" style="padding:24px">
+            <div class="icon">📭</div>
+            <p>Chưa có deck nào</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Study streak week -->
+      <div class="card">
+        <div style="font-weight:700;font-size:16px;color:var(--brown);margin-bottom:4px;">🗓️ Tuần này</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Tiến độ 7 ngày gần đây</div>
+        <div class="week-bar" id="home-week-bar"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--muted);" id="home-week-labels"></div>
+        <hr class="divider">
+        <div style="display:flex;justify-content:space-between;">
+          <div>
+            <div style="font-size:11px;color:var(--muted);">Thời gian hôm nay</div>
+            <div style="font-weight:700;color:var(--brown);" id="home-time-today">0 phút</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--muted);">Tổng tuần này</div>
+            <div style="font-weight:700;color:var(--brown);" id="home-time-week">0 phút</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="card">
+      <div style="font-weight:700;font-size:16px;color:var(--brown);margin-bottom:14px;">⚡ Bắt đầu học nhanh</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-lg" onclick="startQuickStudy()">🎯 Ôn tập hôm nay</button>
+        <button class="btn btn-ghost btn-lg" onclick="navigate('decks')">➕ Tạo deck mới</button>
+        <button class="btn btn-ghost btn-lg" onclick="navigate('stats')">📈 Xem thống kê</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: STREAK ══ -->
+  <div class="page" id="page-streak">
+    <div class="section-title">🔥 Duy trì Streak</div>
+    <div class="section-sub">Điểm danh hàng ngày để không gián đoạn chuỗi học</div>
+
+    <div class="g2" style="margin-bottom:20px;">
+      <div class="card card-lg" style="text-align:center;">
+        <div class="streak-fire" id="streak-emoji">🔥</div>
+        <div style="font-size:64px;font-weight:800;color:var(--brown);line-height:1;" id="streak-count-big">0</div>
+        <div style="font-size:16px;color:var(--muted);margin-bottom:20px;">ngày liên tiếp</div>
+        <button class="btn btn-primary btn-lg" id="checkin-btn" onclick="doCheckin()" style="margin:0 auto;">
+          ✅ Điểm danh hôm nay
+        </button>
+        <div style="font-size:12px;color:var(--muted);margin-top:12px;" id="checkin-status"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="card">
+          <div style="display:flex;gap:16px;">
+            <div class="stat-tile" style="flex:1;border:none;box-shadow:none;background:var(--cream);border-radius:12px;">
+              <div class="label">🏆 Streak dài nhất</div>
+              <div class="value" id="streak-best">0</div>
+              <div class="sub">ngày</div>
+            </div>
+            <div class="stat-tile" style="flex:1;border:none;box-shadow:none;background:var(--cream);border-radius:12px;">
+              <div class="label">📅 Tổng ngày học</div>
+              <div class="value" id="streak-total-days">0</div>
+              <div class="sub">ngày</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-weight:700;font-size:14px;color:var(--brown);margin-bottom:10px;">📍 Tuần này</div>
+          <div class="week-bar" id="streak-week-bar" style="gap:6px;"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--muted);" id="streak-week-labels"></div>
+        </div>
+        <div class="card">
+          <div style="font-weight:700;font-size:14px;color:var(--brown);margin-bottom:6px;">🎖️ Thành tích</div>
+          <div id="achievements-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-weight:700;font-size:16px;color:var(--brown);">📆 Lịch sử điểm danh</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-ghost btn-sm" onclick="calPrev()">‹</button>
+          <span style="font-size:14px;font-weight:600;color:var(--brown);" id="cal-month-label"></span>
+          <button class="btn btn-ghost btn-sm" onclick="calNext()">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: TIMER ══ -->
+  <div class="page" id="page-timer">
+    <div class="section-title">⏱️ Theo dõi thời gian học</div>
+    <div class="section-sub">Đo thời gian mỗi phiên học để nắm rõ thói quen của bạn</div>
+
+    <div class="g2" style="margin-bottom:20px;align-items:start;">
+      <div class="card card-lg" style="text-align:center;">
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;" id="timer-mode-label">POMODORO – 25 phút</div>
+        <div class="timer-circle" id="timer-circle" style="--progress:0%;">
+          <div class="timer-inner">
+            <div class="timer-display" id="timer-display">25:00</div>
+            <div class="timer-label" id="timer-sublabel">Sẵn sàng</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="timer-start-btn" onclick="timerToggle()">▶ Bắt đầu</button>
+          <button class="btn btn-ghost" onclick="timerReset()">↺ Đặt lại</button>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-ghost" onclick="setTimerMode('pomodoro')">🍅 25 phút</button>
+          <button class="btn btn-sm btn-ghost" onclick="setTimerMode('short')">☕ 5 phút</button>
+          <button class="btn btn-sm btn-ghost" onclick="setTimerMode('long')">🌙 15 phút</button>
+          <button class="btn btn-sm btn-ghost" onclick="setTimerMode('free')">∞ Tự do</button>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="g2">
+          <div class="stat-tile">
+            <div class="label">⏳ Hôm nay</div>
+            <div class="value" id="timer-today">0</div>
+            <div class="sub">phút học</div>
+          </div>
+          <div class="stat-tile">
+            <div class="label">📅 Tuần này</div>
+            <div class="value" id="timer-week">0</div>
+            <div class="sub">phút học</div>
+          </div>
+          <div class="stat-tile">
+            <div class="label">🍅 Pomodoro</div>
+            <div class="value" id="timer-pomodoros">0</div>
+            <div class="sub">phiên hôm nay</div>
+          </div>
+          <div class="stat-tile">
+            <div class="label">📈 Trung bình/ngày</div>
+            <div class="value" id="timer-avg">0</div>
+            <div class="sub">phút</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:700;font-size:14px;color:var(--brown);margin-bottom:12px;">📋 Phiên học gần đây</div>
+          <ul class="session-list" id="session-list">
+            <li style="color:var(--muted);font-size:13px;justify-content:center;">Chưa có phiên nào</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly chart -->
+    <div class="card">
+      <div style="font-weight:700;font-size:16px;color:var(--brown);margin-bottom:16px;">📊 Thời gian học 7 ngày qua (phút)</div>
+      <div class="bar-chart" id="timer-week-chart"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: DECKS ══ -->
+  <div class="page" id="page-decks">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div class="section-title">📚 Quản lý Deck</div>
+        <div class="section-sub">Tổ chức từ vựng theo chủ đề và lộ trình học</div>
+      </div>
+      <button class="btn btn-primary" onclick="openCreateDeck()">➕ Tạo deck mới</button>
+    </div>
+
+    <!-- Search & filter -->
+    <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+      <input type="text" class="input" style="max-width:280px;padding:9px 14px;" placeholder="🔍 Tìm kiếm deck..." id="deck-search" oninput="filterDecks()">
+      <select class="input" style="max-width:160px;padding:9px 14px;" id="deck-filter" onchange="filterDecks()">
+        <option value="all">Tất cả</option>
+        <option value="due">Cần ôn tập</option>
+        <option value="new">Có từ mới</option>
+      </select>
+    </div>
+
+    <div id="deck-grid" class="g3"></div>
+  </div>
+
+  <!-- ══ PAGE: DECK DETAIL ══ -->
+  <div class="page" id="page-deck-detail">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <button class="btn btn-ghost btn-sm" onclick="navigate('decks')">← Quay lại</button>
+      <div style="font-size:20px;font-weight:800;color:var(--brown);" id="deck-detail-name">Deck</div>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="editCurrentDeck()">✏️ Sửa</button>
+        <button class="btn btn-primary" onclick="startStudy()">🎯 Học ngay</button>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px;" id="deck-detail-desc"></div>
+
+    <!-- Stats row -->
+    <div class="g4" style="margin-bottom:18px;" id="deck-detail-stats"></div>
+
+    <!-- Sub tabs -->
+    <div class="sub-tabs" style="margin-bottom:16px;">
+      <button class="sub-tab active" onclick="switchDeckTab('words',this)">📝 Từ vựng</button>
+      <button class="sub-tab" onclick="switchDeckTab('add',this)">➕ Thêm thẻ</button>
+      <button class="sub-tab" onclick="switchDeckTab('progress',this)">📈 Tiến độ</button>
+    </div>
+
+    <!-- Words list -->
+    <div class="tab-content active" id="deck-tab-words">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <input type="text" class="input" style="max-width:260px;padding:8px 12px;" placeholder="🔍 Tìm từ..." id="word-search" oninput="filterWords()">
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="importWords()">📥 Import CSV</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div id="word-list"></div>
+      </div>
+    </div>
+
+    <!-- Add card -->
+    <div class="tab-content" id="deck-tab-add">
+      <div class="card card-lg">
+        <div style="font-weight:700;font-size:16px;color:var(--brown);margin-bottom:16px;">✨ Thêm thẻ flashcard mới</div>
+        <div class="g2" style="gap:20px;">
+          <!-- FRONT -->
+          <div style="border:1.5px solid var(--cream-dk);border-radius:14px;padding:16px;">
+            <div style="font-weight:700;font-size:13px;color:var(--green-dk);margin-bottom:12px;text-transform:uppercase;letter-spacing:.8px;">MẶT TRƯỚC (Front)</div>
+            <div style="margin-bottom:10px;">
+              <label class="input-label">Từ / Câu *</label>
+              <input type="text" class="input" id="front-word" placeholder="Nhập từ vựng...">
+            </div>
+            <div style="margin-bottom:10px;">
+              <label class="input-label">Phiên âm</label>
+              <input type="text" class="input" id="front-phonetic" placeholder="/fəˈnetɪk/">
+            </div>
+            <div style="margin-bottom:10px;">
+              <label class="input-label">Hình ảnh (URL hoặc Base64)</label>
+              <input type="text" class="input" id="front-image" placeholder="https://... hoặc upload ↓" oninput="previewImage('front')">
+              <input type="file" accept="image/*" style="margin-top:6px;font-size:12px;" onchange="handleImageUpload(event,'front')">
+              <img id="front-img-preview" class="img-preview" style="margin-top:8px;display:none;">
+            </div>
+            <div>
+              <label class="input-label">Âm thanh (URL hoặc upload)</label>
+              <input type="text" class="input" id="front-audio" placeholder="https://...mp3">
+              <input type="file" accept="audio/*" style="margin-top:6px;font-size:12px;" onchange="handleAudioUpload(event,'front')">
+            </div>
+          </div>
+          <!-- BACK -->
+          <div style="border:1.5px solid var(--cream-dk);border-radius:14px;padding:16px;">
+            <div style="font-weight:700;font-size:13px;color:var(--brown-lt);margin-bottom:12px;text-transform:uppercase;letter-spacing:.8px;">MẶT SAU (Back)</div>
+            <div style="margin-bottom:10px;">
+              <label class="input-label">Nghĩa / Dịch *</label>
+              <textarea class="input" id="back-meaning" placeholder="Nhập nghĩa, định nghĩa..."></textarea>
+            </div>
+            <div style="margin-bottom:10px;">
+              <label class="input-label">Ví dụ</label>
+              <textarea class="input" id="back-example" placeholder="Câu ví dụ sử dụng từ này..." style="min-height:60px;"></textarea>
+            </div>
+            <div style="margin-bottom:10px;">
+              <label class="input-label">Hình ảnh (URL hoặc Base64)</label>
+              <input type="text" class="input" id="back-image" placeholder="https://... hoặc upload ↓" oninput="previewImage('back')">
+              <input type="file" accept="image/*" style="margin-top:6px;font-size:12px;" onchange="handleImageUpload(event,'back')">
+              <img id="back-img-preview" class="img-preview" style="margin-top:8px;display:none;">
+            </div>
+            <div>
+              <label class="input-label">Âm thanh (URL hoặc upload)</label>
+              <input type="text" class="input" id="back-audio" placeholder="https://...mp3">
+              <input type="file" accept="audio/*" style="margin-top:6px;font-size:12px;" onchange="handleAudioUpload(event,'back')">
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <label class="input-label">Ghi chú thêm</label>
+          <textarea class="input" id="card-notes" placeholder="Ghi chú, mẹo ghi nhớ..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button class="btn btn-primary btn-lg" onclick="addCard()">✅ Lưu thẻ</button>
+          <button class="btn btn-ghost" onclick="clearCardForm()">🗑️ Xóa form</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="tab-content" id="deck-tab-progress">
+      <div id="deck-progress-content"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: STATS ══ -->
+  <div class="page" id="page-stats">
+    <div class="section-title">📊 Thống kê học tập</div>
+    <div class="section-sub">Theo dõi tiến độ và hiệu quả học từ vựng của bạn</div>
+
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button class="btn btn-sm btn-primary" onclick="setStatsPeriod('week',this)">Tuần này</button>
+      <button class="btn btn-sm btn-ghost" onclick="setStatsPeriod('month',this)">Tháng này</button>
+      <button class="btn btn-sm btn-ghost" onclick="setStatsPeriod('all',this)">Tổng</button>
+    </div>
+
+    <div class="g4" style="margin-bottom:20px;" id="stats-tiles"></div>
+
+    <div class="g2" style="margin-bottom:20px;">
+      <div class="card">
+        <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">📅 Thẻ học theo ngày</div>
+        <div class="bar-chart" id="stats-daily-chart" style="height:160px;"></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">🎯 Tỉ lệ trả lời</div>
+        <div id="stats-accuracy-chart"></div>
+      </div>
+    </div>
+
+    <div class="g2" style="margin-bottom:20px;">
+      <div class="card">
+        <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">📚 Phân bổ SRS</div>
+        <div id="stats-srs-dist"></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">🗺️ Heatmap hoạt động</div>
+        <div class="heatmap" id="stats-heatmap"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--muted);">
+          <span>Ít</span>
+          <div class="hm-cell"></div>
+          <div class="hm-cell l1"></div>
+          <div class="hm-cell l2"></div>
+          <div class="hm-cell l3"></div>
+          <div class="hm-cell l4"></div>
+          <span>Nhiều</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">🏆 Top từ khó nhất</div>
+      <div id="stats-hard-words"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: SETTINGS ══ -->
+  <div class="page" id="page-settings">
+    <div class="section-title">⚙️ Cài đặt</div>
+    <div class="section-sub">Tuỳ chỉnh trải nghiệm học tập của bạn</div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;max-width:600px;">
+      <div class="card">
+        <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">🎯 Mục tiêu học tập</div>
+        <div style="margin-bottom:12px;">
+          <label class="input-label">Số thẻ mới mỗi ngày (mỗi deck)</label>
+          <input type="number" class="input" id="setting-new-per-day" value="20" min="1" max="100" onchange="saveSetting('newPerDay',this.value)">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label class="input-label">Số thẻ ôn tập tối đa mỗi ngày</label>
+          <input type="number" class="input" id="setting-review-per-day" value="100" min="10" max="500" onchange="saveSetting('reviewPerDay',this.value)">
+        </div>
+        <div>
+          <label class="input-label">Mục tiêu thời gian/ngày (phút)</label>
+          <input type="number" class="input" id="setting-daily-goal" value="30" min="5" max="240" onchange="saveSetting('dailyGoal',this.value)">
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">🔔 Nhắc nhở</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-weight:600;font-size:14px;">Nhắc nhở hàng ngày</div>
+            <div style="font-size:12px;color:var(--muted);">Nhận thông báo để duy trì streak</div>
+          </div>
+          <label style="cursor:pointer;position:relative;display:inline-block;width:48px;height:26px;">
+            <input type="checkbox" id="setting-reminder" onchange="saveSetting('reminder',this.checked)" style="opacity:0;width:0;height:0;">
+            <span id="toggle-thumb" style="position:absolute;inset:0;background:var(--cream-dk);border-radius:13px;transition:.3s;"></span>
+          </label>
+        </div>
+        <div>
+          <label class="input-label">Giờ nhắc nhở</label>
+          <input type="time" class="input" id="setting-reminder-time" value="20:00" onchange="saveSetting('reminderTime',this.value)">
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">🎨 Giao diện</div>
+        <div>
+          <label class="input-label">Tên hiển thị</label>
+          <input type="text" class="input" id="setting-name" placeholder="Nhập tên của bạn..." onchange="saveSetting('userName',this.value)">
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700;font-size:15px;color:var(--brown);margin-bottom:14px;">💾 Dữ liệu</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" onclick="exportData()">📤 Xuất dữ liệu</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">📥 Nhập dữ liệu</button>
+          <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
+          <button class="btn btn-danger" onclick="confirmReset()">🗑️ Xóa tất cả</button>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted);">
+          Dữ liệu được lưu cục bộ trên thiết bị của bạn qua localStorage.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STUDY OVERLAY ══ -->
+<div id="study-overlay">
+  <div class="study-header">
+    <button class="btn btn-ghost btn-sm" onclick="closeStudy()">✕ Thoát</button>
+    <div class="study-progress-bar">
+      <div class="study-progress-fill" id="study-prog-fill" style="width:0%"></div>
+    </div>
+    <div style="font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;" id="study-counter">0 / 0</div>
+    <div style="font-size:13px;color:var(--green-dk);font-weight:700;" id="study-deck-name"></div>
+  </div>
+
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;gap:24px;">
+    <!-- Stats row -->
+    <div style="display:flex;gap:20px;font-size:13px;font-weight:600;">
+      <span style="color:#e74c3c;">✗ <span id="study-count-again">0</span></span>
+      <span style="color:#e67e22;">~ <span id="study-count-hard">0</span></span>
+      <span style="color:var(--green);">✓ <span id="study-count-good">0</span></span>
+      <span style="color:var(--brown);">⚡ <span id="study-count-easy">0</span></span>
+    </div>
+
+    <div class="fc-scene" id="fc-scene" onclick="flipCard()">
+      <div class="fc-card" id="fc-card">
+        <!-- Front -->
+        <div class="fc-face fc-front" id="fc-front">
+          <div class="fc-phonetic" id="fc-front-phonetic"></div>
+          <div class="fc-word" id="fc-front-word"></div>
+          <img id="fc-front-img" class="fc-image" style="display:none;">
+          <button class="btn btn-sm btn-ghost" id="fc-front-audio-btn" style="display:none;" onclick="event.stopPropagation();playAudio('front')">🔊 Nghe</button>
+        </div>
+        <!-- Back -->
+        <div class="fc-face fc-back" id="fc-back">
+          <div class="fc-phonetic" id="fc-back-phonetic"></div>
+          <div class="fc-word" id="fc-back-word" style="font-size:24px;"></div>
+          <div class="fc-meaning" id="fc-back-meaning"></div>
+          <img id="fc-back-img" class="fc-image" style="display:none;border:none;opacity:.85;">
+          <div id="fc-back-example" style="font-size:12px;color:rgba(255,255,255,.6);font-style:italic;text-align:center;"></div>
+          <button class="btn btn-sm" id="fc-back-audio-btn" style="display:none;background:rgba(255,255,255,.2);color:#fff;border:none;" onclick="event.stopPropagation();playAudio('back')">🔊 Nghe</button>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px;">Nhấn để xem mặt trước</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:13px;color:var(--muted);" id="study-hint">Nhấn vào thẻ để lật ↑</div>
+
+    <!-- Rating -->
+    <div id="rating-area" style="display:none;width:100%;max-width:480px;">
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px;">Bạn nhớ từ này ở mức nào?</div>
+      <div class="rating-buttons">
+        <button class="rating-btn rb-again" onclick="rateCard(0)">
+          ✗ Không nhớ
+          <span class="next-label" id="next-again">< 1p</span>
+        </button>
+        <button class="rating-btn rb-hard" onclick="rateCard(1)">
+          ~ Khó
+          <span class="next-label" id="next-hard">< 6p</span>
+        </button>
+        <button class="rating-btn rb-good" onclick="rateCard(2)">
+          ✓ Tốt
+          <span class="next-label" id="next-good">1 ngày</span>
+        </button>
+        <button class="rating-btn rb-easy" onclick="rateCard(3)">
+          ⚡ Dễ
+          <span class="next-label" id="next-easy">4 ngày</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Complete screen -->
+    <div id="study-complete" style="display:none;text-align:center;max-width:400px;">
+      <div style="font-size:72px;margin-bottom:16px;">🎉</div>
+      <div style="font-size:24px;font-weight:800;color:var(--brown);margin-bottom:8px;">Hoàn thành!</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;" id="study-complete-msg"></div>
+      <div class="g2" style="margin-bottom:20px;" id="study-complete-stats"></div>
+      <button class="btn btn-primary btn-lg" onclick="closeStudy()">← Về trang chủ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CREATE/EDIT DECK ══ -->
+<div class="modal-overlay" id="modal-deck">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-deck-title">Tạo Deck mới</div>
+      <button class="modal-close" onclick="closeModal('modal-deck')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px;">
+        <label class="input-label">Tên deck *</label>
+        <input type="text" class="input" id="deck-name-input" placeholder="VD: IELTS Vocabulary, Tiếng Anh giao tiếp...">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="input-label">Mô tả</label>
+        <textarea class="input" id="deck-desc-input" placeholder="Mô tả ngắn về deck này..."></textarea>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label class="input-label">Biểu tượng</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="emoji-picker">
+          <span>📚</span><span>🌏</span><span>🎓</span><span>💼</span><span>🏆</span><span>🌸</span><span>🔬</span><span>🎵</span><span>💻</span><span>🍕</span><span>✈️</span><span>🦊</span>
+        </div>
+        <input type="text" class="input" id="deck-emoji-input" value="📚" style="max-width:80px;margin-top:8px;text-align:center;font-size:20px;">
+      </div>
+      <div>
+        <label class="input-label">Màu nhãn</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="color-picker">
+          <div class="color-opt" data-color="#809671" style="width:28px;height:28px;border-radius:8px;background:#809671;cursor:pointer;border:2px solid transparent;"></div>
+          <div class="color-opt" data-color="#725C3A" style="width:28px;height:28px;border-radius:8px;background:#725C3A;cursor:pointer;border:2px solid transparent;"></div>
+          <div class="color-opt" data-color="#4a90d9" style="width:28px;height:28px;border-radius:8px;background:#4a90d9;cursor:pointer;border:2px solid transparent;"></div>
+          <div class="color-opt" data-color="#e67e22" style="width:28px;height:28px;border-radius:8px;background:#e67e22;cursor:pointer;border:2px solid transparent;"></div>
+          <div class="color-opt" data-color="#8e44ad" style="width:28px;height:28px;border-radius:8px;background:#8e44ad;cursor:pointer;border:2px solid transparent;"></div>
+          <div class="color-opt" data-color="#e74c3c" style="width:28px;height:28px;border-radius:8px;background:#e74c3c;cursor:pointer;border:2px solid transparent;"></div>
+          <div class="color-opt" data-color="#16a085" style="width:28px;height:28px;border-radius:8px;background:#16a085;cursor:pointer;border:2px solid transparent;"></div>
+        </div>
+        <input type="hidden" id="deck-color-input" value="#809671">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-deck')">Huỷ</button>
+      <button class="btn btn-primary" onclick="saveDeck()">💾 Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: EDIT CARD ══ -->
+<div class="modal-overlay" id="modal-edit-card">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Chỉnh sửa thẻ</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-card')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="g2" style="gap:16px;">
+        <div style="border:1.5px solid var(--cream-dk);border-radius:12px;padding:14px;">
+          <div style="font-weight:700;font-size:12px;color:var(--green-dk);margin-bottom:10px;text-transform:uppercase;">MẶT TRƯỚC</div>
+          <div style="margin-bottom:8px;"><label class="input-label">Từ / Câu</label><input type="text" class="input" id="edit-front-word"></div>
+          <div style="margin-bottom:8px;"><label class="input-label">Phiên âm</label><input type="text" class="input" id="edit-front-phonetic"></div>
+          <div style="margin-bottom:8px;"><label class="input-label">Hình ảnh URL</label><input type="text" class="input" id="edit-front-image" oninput="previewEditImage('front')"><img id="edit-front-img-preview" class="img-preview" style="margin-top:6px;display:none;height:80px;"></div>
+          <div><label class="input-label">Âm thanh URL</label><input type="text" class="input" id="edit-front-audio"></div>
+        </div>
+        <div style="border:1.5px solid var(--cream-dk);border-radius:12px;padding:14px;">
+          <div style="font-weight:700;font-size:12px;color:var(--brown-lt);margin-bottom:10px;text-transform:uppercase;">MẶT SAU</div>
+          <div style="margin-bottom:8px;"><label class="input-label">Nghĩa / Dịch</label><textarea class="input" id="edit-back-meaning" style="min-height:60px;"></textarea></div>
+          <div style="margin-bottom:8px;"><label class="input-label">Ví dụ</label><textarea class="input" id="edit-back-example" style="min-height:50px;"></textarea></div>
+          <div style="margin-bottom:8px;"><label class="input-label">Hình ảnh URL</label><input type="text" class="input" id="edit-back-image" oninput="previewEditImage('back')"><img id="edit-back-img-preview" class="img-preview" style="margin-top:6px;display:none;height:80px;"></div>
+          <div><label class="input-label">Âm thanh URL</label><input type="text" class="input" id="edit-back-audio"></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;"><label class="input-label">Ghi chú</label><textarea class="input" id="edit-notes"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-card')">Huỷ</button>
+      <button class="btn btn-primary" onclick="saveEditCard()">💾 Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CONFIRM ══ -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title" id="confirm-title">Xác nhận</div>
+      <button class="modal-close" onclick="closeModal('modal-confirm')">×</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-msg" style="color:var(--muted);font-size:14px;line-height:1.6;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Huỷ</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST CONTAINER ══ -->
+<div id="toast-container"></div>
+
+<!-- ══ MOBILE OVERLAY ══ -->
+<div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;" onclick="closeSidebar()"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DATA LAYER – localStorage helpers
+// ════════════════════════════════════════════════════════════
+const LS = {
+  get(k, def=null){ try{ const v=localStorage.getItem('vc_'+k); return v!==null?JSON.parse(v):def; }catch(e){ return def; } },
+  set(k,v){ localStorage.setItem('vc_'+k, JSON.stringify(v)); },
+  del(k){ localStorage.removeItem('vc_'+k); }
+};
+
+// APP STATE
+let state = {
+  decks: LS.get('decks', []),
+  streak: LS.get('streak', { current:0, best:0, lastDate:null, history:[] }),
+  sessions: LS.get('sessions', []),
+  settings: LS.get('settings', { newPerDay:20, reviewPerDay:100, dailyGoal:30, userName:'Bạn', reminder:false, reminderTime:'20:00' }),
+  stats: LS.get('stats', { reviewHistory:[] }),
+  currentDeckId: null,
+  editingDeckId: null,
+  editingCardId: null
+};
+
+function saveState(){
+  LS.set('decks', state.decks);
+  LS.set('streak', state.streak);
+  LS.set('sessions', state.sessions);
+  LS.set('settings', state.settings);
+  LS.set('stats', state.stats);
+}
+
+// ════════════════════════════════════════════════════════════
+// SM-2 ALGORITHM (adapted)
+// ════════════════════════════════════════════════════════════
+function sm2Review(card, grade) {
+  // grade: 0=again, 1=hard, 2=good, 3=easy
+  const now = Date.now();
+  let { interval=1, easeFactor=2.5, repetitions=0, lapses=0 } = card.srs || {};
+
+  if (grade === 0) {
+    repetitions = 0; lapses++; interval = 1;
+    easeFactor = Math.max(1.3, easeFactor - 0.2);
+  } else if (grade === 1) {
+    interval = Math.max(1, Math.round(interval * 1.2));
+    easeFactor = Math.max(1.3, easeFactor - 0.15);
+  } else if (grade === 2) {
+    if (repetitions === 0) interval = 1;
+    else if (repetitions === 1) interval = 6;
+    else interval = Math.round(interval * easeFactor);
+    repetitions++;
+  } else { // easy
+    if (repetitions === 0) interval = 4;
+    else if (repetitions === 1) interval = 10;
+    else interval = Math.round(interval * easeFactor * 1.3);
+    easeFactor = Math.min(3.0, easeFactor + 0.1);
+    repetitions++;
+  }
+
+  const dueDate = now + interval * 86400000;
+  const stage = repetitions === 0 ? 'learn' : interval >= 21 ? 'mature' : interval >= 3 ? 'review' : 'learn';
+
+  return { interval, easeFactor, repetitions, lapses, lastReview:now, dueDate, stage };
+}
+
+function getNextLabel(card, grade) {
+  const { interval=1, easeFactor=2.5, repetitions=0 } = card.srs || {};
+  const labels = ['< 1p', '< 6p', '', ''];
+  if (grade === 2) {
+    if (repetitions === 0) return '1 ngày';
+    if (repetitions === 1) return '6 ngày';
+    return Math.round(interval * easeFactor) + ' ngày';
+  }
+  if (grade === 3) {
+    if (repetitions === 0) return '4 ngày';
+    return Math.round(interval * easeFactor * 1.3) + ' ngày';
+  }
+  return labels[grade];
+}
+
+function isDue(card) {
+  if (!card.srs) return true;
+  return Date.now() >= card.srs.dueDate;
+}
+
+function isNewCard(card) { return !card.srs; }
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+const PAGE_TITLES = {
+  home:'Tổng quan', streak:'Duy trì Streak', timer:'Thời gian học',
+  decks:'Quản lý Deck', stats:'Thống kê', settings:'Cài đặt',
+  'deck-detail':'Chi tiết Deck'
+};
+
+function navigate(page, deckId=null) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const pg = document.getElementById('page-'+page);
+  if (pg) pg.classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[page] || page;
+
+  if (page === 'deck-detail' && deckId) {
+    state.currentDeckId = deckId;
+    renderDeckDetail(deckId);
+  }
+  if (page === 'home') renderHome();
+  if (page === 'streak') renderStreak();
+  if (page === 'timer') renderTimerPage();
+  if (page === 'decks') renderDecks();
+  if (page === 'stats') renderStats('week');
+  if (page === 'settings') renderSettings();
+
+  if (window.innerWidth < 768) closeSidebar();
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
+  btn.addEventListener('click', () => navigate(btn.dataset.page));
+});
+
+// ════════════════════════════════════════════════════════════
+// SIDEBAR TOGGLE
+// ════════════════════════════════════════════════════════════
+const sidebar = document.getElementById('sidebar');
+const main = document.getElementById('main');
+let sidebarOpen = window.innerWidth >= 768;
+
+document.getElementById('toggle-sidebar').addEventListener('click', () => {
+  if (window.innerWidth < 768) {
+    sidebar.classList.toggle('open');
+    document.getElementById('sidebar-overlay').style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+  } else {
+    sidebarOpen = !sidebarOpen;
+    sidebar.classList.toggle('collapsed', !sidebarOpen);
+    main.classList.toggle('expanded', !sidebarOpen);
+  }
+});
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  document.getElementById('sidebar-overlay').style.display = 'none';
+}
+
+// ════════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════════
+function toast(msg, type='', duration=2800) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span>${msg}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='.3s'; setTimeout(()=>el.remove(),300); }, duration);
+}
+
+// ════════════════════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.classList.remove('open'); });
+});
+
+// ════════════════════════════════════════════════════════════
+// DATE HELPERS
+// ════════════════════════════════════════════════════════════
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function dateStr(d) { return new Date(d).toISOString().slice(0,10); }
+function fmtDate(s) {
+  const d = new Date(s+'T00:00:00');
+  return d.toLocaleDateString('vi-VN',{weekday:'short',day:'numeric',month:'short'});
+}
+function fmtMinutes(m) {
+  if(m<60) return m+'p';
+  return Math.floor(m/60)+'h'+(m%60?m%60+'p':'');
+}
+
+// Update topbar date
+function updateTopbar() {
+  const now = new Date();
+  document.getElementById('today-display').textContent = now.toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  // Greet
+  const h = now.getHours();
+  const greet = h<11?'Chào buổi sáng':h<14?'Chào buổi trưa':h<18?'Chào buổi chiều':'Chào buổi tối';
+  const nameEl = document.querySelector('#page-home .section-title');
+  if(nameEl) nameEl.textContent = `${greet}, ${state.settings.userName||'bạn'}! 🌿`;
+}
+
+// ════════════════════════════════════════════════════════════
+// STREAK
+// ════════════════════════════════════════════════════════════
+function doCheckin() {
+  const today = todayStr();
+  const s = state.streak;
+  if (s.lastDate === today) { toast('Bạn đã điểm danh hôm nay rồi! 🎉','success'); return; }
+
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yStr = yesterday.toISOString().slice(0,10);
+
+  if (s.lastDate === yStr) s.current++;
+  else if (s.lastDate !== today) s.current = 1;
+
+  s.best = Math.max(s.best, s.current);
+  s.lastDate = today;
+  if (!s.history.includes(today)) s.history.push(today);
+
+  saveState();
+  updateNavBadges();
+  toast(`🔥 Streak ${s.current} ngày! Tuyệt vời!`, 'success');
+  renderStreak();
+  renderHome();
+}
+
+function renderStreak() {
+  const s = state.streak;
+  const today = todayStr();
+
+  // Update streak count
+  document.getElementById('streak-count-big').textContent = s.current;
+  document.getElementById('streak-best').textContent = s.best;
+  document.getElementById('streak-total-days').textContent = s.history.length;
+  document.getElementById('nav-streak').textContent = s.current;
+  document.getElementById('topbar-streak').textContent = s.current;
+  document.getElementById('home-streak').textContent = s.current;
+
+  // Checkin button
+  const btn = document.getElementById('checkin-btn');
+  const statusEl = document.getElementById('checkin-status');
+  if (s.lastDate === today) {
+    btn.textContent = '✅ Đã điểm danh hôm nay';
+    btn.disabled = true; btn.style.opacity='.6';
+    statusEl.textContent = 'Hẹn gặp lại ngày mai! 🌟';
+  } else {
+    btn.textContent = '✅ Điểm danh hôm nay';
+    btn.disabled = false; btn.style.opacity='1';
+    statusEl.textContent = 'Chưa điểm danh hôm nay';
+  }
+
+  // Emoji based on streak
+  const fire = document.getElementById('streak-emoji');
+  if (fire) fire.textContent = s.current>=30?'🏆':s.current>=14?'💎':s.current>=7?'⭐':'🔥';
+
+  // Week bar
+  renderWeekBar('streak-week-bar', 'streak-week-labels');
+
+  // Calendar
+  renderCalendar();
+
+  // Achievements
+  renderAchievements();
+}
+
+function renderWeekBar(barId, labelId) {
+  const barEl = document.getElementById(barId);
+  const labelEl = document.getElementById(labelId);
+  if(!barEl) return;
+  const days=['CN','T2','T3','T4','T5','T6','T7'];
+  const today = new Date();
+  barEl.innerHTML=''; if(labelEl) labelEl.innerHTML='';
+  for(let i=6;i>=0;i--) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const str = d.toISOString().slice(0,10);
+    const done = state.streak.history.includes(str);
+    const isToday = (i===0);
+    const dot = document.createElement('div');
+    dot.className='week-dot'+(done?isToday?' today':' done':'');
+    barEl.appendChild(dot);
+    if(labelEl) { const l=document.createElement('span'); l.textContent=days[d.getDay()]; labelEl.appendChild(l); }
+  }
+}
+
+// Calendar state
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function calPrev() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function renderCalendar() {
+  const grid = document.getElementById('cal-grid');
+  const label = document.getElementById('cal-month-label');
+  if (!grid) return;
+
+  label.textContent = new Date(calYear,calMonth,1).toLocaleDateString('vi-VN',{month:'long',year:'numeric'});
+  grid.innerHTML='';
+
+  const days=['CN','T2','T3','T4','T5','T6','T7'];
+  days.forEach(d=>{
+    const el=document.createElement('div');
+    el.className='cal-day header'; el.textContent=d;
+    grid.appendChild(el);
+  });
+
+  const first = new Date(calYear,calMonth,1);
+  const startDay = first.getDay();
+  const daysInMonth = new Date(calYear,calMonth+1,0).getDate();
+  const today = todayStr();
+
+  for(let i=0;i<startDay;i++){
+    const el=document.createElement('div'); el.className='cal-day future';
+    grid.appendChild(el);
+  }
+
+  for(let d=1;d<=daysInMonth;d++){
+    const str=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const done=state.streak.history.includes(str);
+    const isTodayDate=(str===today);
+    const isPast=str<today;
+    const el=document.createElement('div');
+    el.textContent=d;
+    el.className='cal-day'+(isTodayDate?' today':done?' done':isPast?' missed':' future');
+    el.title=fmtDate(str);
+    grid.appendChild(el);
+  }
+}
+
+function renderAchievements() {
+  const el = document.getElementById('achievements-list');
+  if (!el) return;
+  const s = state.streak;
+  const achs = [
+    { id:'s3', icon:'🌱', name:'Khởi đầu', desc:'3 ngày liên tiếp', req: s.best>=3 },
+    { id:'s7', icon:'⭐', name:'Tuần lễ', desc:'7 ngày liên tiếp', req: s.best>=7 },
+    { id:'s14', icon:'💫', name:'Hai tuần', desc:'14 ngày liên tiếp', req: s.best>=14 },
+    { id:'s30', icon:'💎', name:'Một tháng', desc:'30 ngày liên tiếp', req: s.best>=30 },
+    { id:'t10', icon:'📖', name:'Tủ sách', desc:'Tổng 10 ngày học', req: s.history.length>=10 },
+    { id:'t50', icon:'🏅', name:'Kiên trì', desc:'Tổng 50 ngày học', req: s.history.length>=50 },
+  ];
+  el.innerHTML = achs.map(a => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:${a.req?'rgba(128,150,113,.12)':'var(--cream)'};opacity:${a.req?1:.45};min-width:140px;" title="${a.desc}">
+      <span style="font-size:22px;">${a.icon}</span>
+      <div><div style="font-size:12px;font-weight:700;color:var(--brown);">${a.name}</div><div style="font-size:10px;color:var(--muted);">${a.desc}</div></div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════════════════════════
+let timerInterval = null;
+let timerRunning = false;
+let timerSeconds = 0;
+let timerTotal = 25*60;
+let timerMode = 'pomodoro';
+let timerFreeSeconds = 0;
+
+const TIMER_MODES = {
+  pomodoro: { label:'POMODORO – 25 phút', seconds:25*60 },
+  short:    { label:'Nghỉ ngắn – 5 phút',  seconds:5*60 },
+  long:     { label:'Nghỉ dài – 15 phút',  seconds:15*60 },
+  free:     { label:'Học tự do – không giới hạn', seconds:0 }
+};
+
+function setTimerMode(mode) {
+  timerMode = mode;
+  timerReset();
+  document.getElementById('timer-mode-label').textContent = TIMER_MODES[mode].label;
+}
+
+function timerToggle() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timer-start-btn').textContent = '▶ Tiếp tục';
+    document.getElementById('timer-sublabel').textContent = 'Tạm dừng';
+    // Save partial session
+    if (timerMode === 'free' && timerFreeSeconds > 60) saveSession(Math.floor(timerFreeSeconds/60));
+  } else {
+    timerRunning = true;
+    document.getElementById('timer-start-btn').textContent = '⏸ Tạm dừng';
+    document.getElementById('timer-sublabel').textContent = 'Đang học...';
+    timerInterval = setInterval(timerTick, 1000);
+  }
+}
+
+function timerTick() {
+  if (timerMode === 'free') {
+    timerFreeSeconds++;
+    const m = Math.floor(timerFreeSeconds/60);
+    const s = timerFreeSeconds%60;
+    document.getElementById('timer-display').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    // Update circle (arbitrary 60min = 100%)
+    const pct = Math.min(timerFreeSeconds / 3600 * 100, 100);
+    document.getElementById('timer-circle').style.setProperty('--progress', pct+'%');
+  } else {
+    timerSeconds++;
+    const remaining = timerTotal - timerSeconds;
+    if (remaining <= 0) {
+      clearInterval(timerInterval); timerRunning = false;
+      document.getElementById('timer-start-btn').textContent = '▶ Bắt đầu';
+      document.getElementById('timer-sublabel').textContent = 'Hoàn thành! 🎉';
+      document.getElementById('timer-display').textContent = '00:00';
+      document.getElementById('timer-circle').style.setProperty('--progress', '100%');
+      if (timerMode === 'pomodoro') {
+        saveSession(25);
+        toast('🍅 Pomodoro hoàn thành! Giỏi lắm!','success');
+        recordStudyDay();
+      }
+      return;
+    }
+    const m = Math.floor(remaining/60), s = remaining%60;
+    document.getElementById('timer-display').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    const pct = (timerSeconds/timerTotal)*100;
+    document.getElementById('timer-circle').style.setProperty('--progress', pct+'%');
+  }
+}
+
+function timerReset() {
+  clearInterval(timerInterval); timerRunning = false; timerSeconds = 0; timerFreeSeconds = 0;
+  document.getElementById('timer-start-btn').textContent = '▶ Bắt đầu';
+  document.getElementById('timer-sublabel').textContent = 'Sẵn sàng';
+  document.getElementById('timer-circle').style.setProperty('--progress','0%');
+  if (timerMode !== 'free') {
+    timerTotal = TIMER_MODES[timerMode].seconds;
+    const m=Math.floor(timerTotal/60),s=timerTotal%60;
+    document.getElementById('timer-display').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  } else {
+    document.getElementById('timer-display').textContent = '00:00';
+  }
+}
+
+function saveSession(minutes) {
+  const today = todayStr();
+  state.sessions.push({ date:today, minutes, mode:timerMode, ts:Date.now() });
+  // Keep last 200
+  if(state.sessions.length>200) state.sessions=state.sessions.slice(-200);
+  saveState();
+  renderTimerStats();
+  recordStudyDay();
+}
+
+function recordStudyDay() {
+  const today = todayStr();
+  if (!state.streak.history.includes(today)) {
+    state.streak.history.push(today);
+    // Update streak
+    const s = state.streak;
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+    const yStr = yesterday.toISOString().slice(0,10);
+    if (s.lastDate === yStr) s.current++;
+    else if (s.lastDate !== today) s.current = 1;
+    s.best = Math.max(s.best, s.current);
+    s.lastDate = today;
+    saveState();
+    updateNavBadges();
+  }
+}
+
+function renderTimerStats() {
+  const today = todayStr();
+  const week = [];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); week.push(d.toISOString().slice(0,10)); }
+
+  const todayMins = state.sessions.filter(s=>s.date===today).reduce((a,b)=>a+b.minutes,0);
+  const weekMins  = state.sessions.filter(s=>week.includes(s.date)).reduce((a,b)=>a+b.minutes,0);
+  const pomCount  = state.sessions.filter(s=>s.date===today&&s.mode==='pomodoro').length;
+
+  const allDates = [...new Set(state.sessions.map(s=>s.date))];
+  const avgMins  = allDates.length ? Math.round(state.sessions.reduce((a,b)=>a+b.minutes,0)/allDates.length) : 0;
+
+  document.getElementById('timer-today').textContent = todayMins;
+  document.getElementById('timer-week').textContent = weekMins;
+  document.getElementById('timer-pomodoros').textContent = pomCount;
+  document.getElementById('timer-avg').textContent = avgMins;
+
+  // Session list
+  const list = document.getElementById('session-list');
+  const recent = [...state.sessions].reverse().slice(0,8);
+  list.innerHTML = recent.length ? recent.map(s=>`
+    <li>
+      <span>${s.mode==='pomodoro'?'🍅':s.mode==='short'?'☕':s.mode==='long'?'🌙':'⏱️'} ${new Date(s.ts).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</span>
+      <span style="color:var(--green);font-weight:700;">${s.minutes} phút</span>
+    </li>`).join('') : '<li style="color:var(--muted);justify-content:center;">Chưa có phiên nào</li>';
+
+  // Weekly chart
+  renderTimerWeekChart(week);
+
+  // home stats
+  document.getElementById('home-time-today').textContent = todayMins + ' phút';
+  document.getElementById('home-time-week').textContent = weekMins + ' phút';
+}
+
+function renderTimerWeekChart(week) {
+  const chart = document.getElementById('timer-week-chart');
+  if(!chart) return;
+  const byDay = week.map(d=>({ label:new Date(d+'T00:00:00').toLocaleDateString('vi-VN',{weekday:'short'}), val: state.sessions.filter(s=>s.date===d).reduce((a,b)=>a+b.minutes,0) }));
+  const max = Math.max(...byDay.map(d=>d.val),1);
+  chart.innerHTML = byDay.map(d=>`
+    <div class="bar-wrap">
+      <div class="bar-val">${d.val||''}</div>
+      <div class="bar" style="height:${Math.max(d.val/max*100,4)}%;"></div>
+      <div class="bar-label">${d.label}</div>
+    </div>`).join('');
+}
+
+function renderTimerPage() {
+  renderTimerStats();
+  const week=[];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); week.push(d.toISOString().slice(0,10)); }
+  renderTimerWeekChart(week);
+}
+
+// ════════════════════════════════════════════════════════════
+// DECK MANAGEMENT
+// ════════════════════════════════════════════════════════════
+let selectedColor = '#809671';
+
+function openCreateDeck() {
+  state.editingDeckId = null;
+  document.getElementById('modal-deck-title').textContent = 'Tạo Deck mới';
+  document.getElementById('deck-name-input').value = '';
+  document.getElementById('deck-desc-input').value = '';
+  document.getElementById('deck-emoji-input').value = '📚';
+  selectedColor = '#809671';
+  document.querySelectorAll('.color-opt').forEach(c=>c.style.border='2px solid transparent');
+  document.querySelector('.color-opt[data-color="#809671"]').style.border='2px solid var(--brown)';
+  openModal('modal-deck');
+}
+
+function editCurrentDeck() {
+  const deck = state.decks.find(d=>d.id===state.currentDeckId);
+  if(!deck) return;
+  state.editingDeckId = deck.id;
+  document.getElementById('modal-deck-title').textContent = 'Chỉnh sửa Deck';
+  document.getElementById('deck-name-input').value = deck.name;
+  document.getElementById('deck-desc-input').value = deck.desc||'';
+  document.getElementById('deck-emoji-input').value = deck.emoji||'📚';
+  selectedColor = deck.color||'#809671';
+  document.querySelectorAll('.color-opt').forEach(c=>c.style.border='2px solid transparent');
+  const colorEl = document.querySelector(`.color-opt[data-color="${selectedColor}"]`);
+  if(colorEl) colorEl.style.border='2px solid var(--brown)';
+  openModal('modal-deck');
+}
+
+document.querySelectorAll('.color-opt').forEach(el=>{
+  el.addEventListener('click',()=>{
+    selectedColor=el.dataset.color;
+    document.querySelectorAll('.color-opt').forEach(c=>c.style.border='2px solid transparent');
+    el.style.border='2px solid var(--brown)';
+    document.getElementById('deck-color-input').value=selectedColor;
+  });
+});
+document.querySelectorAll('#emoji-picker span').forEach(el=>{
+  el.style.cursor='pointer'; el.style.fontSize='24px';
+  el.addEventListener('click',()=>{ document.getElementById('deck-emoji-input').value=el.textContent; });
+});
+
+function saveDeck() {
+  const name = document.getElementById('deck-name-input').value.trim();
+  if(!name){ toast('Vui lòng nhập tên deck','error'); return; }
+  const emoji = document.getElementById('deck-emoji-input').value||'📚';
+  const desc  = document.getElementById('deck-desc-input').value.trim();
+  const color = selectedColor;
+
+  if (state.editingDeckId) {
+    const deck = state.decks.find(d=>d.id===state.editingDeckId);
+    if(deck){ deck.name=name; deck.desc=desc; deck.emoji=emoji; deck.color=color; }
+    toast('✅ Đã cập nhật deck','success');
+  } else {
+    state.decks.push({ id:Date.now().toString(), name, desc, emoji, color, cards:[], created:Date.now() });
+    toast('✅ Đã tạo deck mới','success');
+  }
+
+  saveState(); closeModal('modal-deck'); renderDecks(); updateNavBadges();
+  if(state.editingDeckId) renderDeckDetail(state.editingDeckId);
+}
+
+function deleteDeck(id) {
+  showConfirm('Xóa Deck', 'Bạn có chắc muốn xóa deck này? Tất cả thẻ bên trong sẽ bị mất.', ()=>{
+    state.decks = state.decks.filter(d=>d.id!==id);
+    saveState(); renderDecks(); updateNavBadges();
+    navigate('decks'); toast('🗑️ Đã xóa deck','');
+  });
+}
+
+function renderDecks() {
+  const grid = document.getElementById('deck-grid');
+  const search = document.getElementById('deck-search')?.value?.toLowerCase()||'';
+  const filter = document.getElementById('deck-filter')?.value||'all';
+  updateNavBadges();
+
+  let decks = state.decks.filter(d=>{
+    if(search && !d.name.toLowerCase().includes(search)) return false;
+    if(filter==='due') return getDueCount(d)>0;
+    if(filter==='new') return getNewCount(d)>0;
+    return true;
+  });
+
+  if(!decks.length){
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1;">
+      <div class="icon">📭</div>
+      <div class="title">Chưa có deck nào</div>
+      <p>Tạo deck đầu tiên để bắt đầu hành trình học từ vựng của bạn.</p>
+      <button class="btn btn-primary" onclick="openCreateDeck()">➕ Tạo deck ngay</button>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = decks.map(d=>{
+    const due=getDueCount(d), newC=getNewCount(d), total=d.cards.length;
+    return `<div class="deck-card" onclick="navigate('deck-detail','${d.id}')">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${d.color||'var(--green)'};border-radius:2px 0 0 2px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-size:28px;margin-bottom:4px;">${d.emoji||'📚'}</div>
+          <div class="deck-name">${d.name}</div>
+          ${d.desc?`<div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;">${d.desc}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+          ${due>0?`<span class="deck-chip due">📅 ${due} ôn tập</span>`:''}
+          ${newC>0?`<span class="deck-chip new">✨ ${newC} mới</span>`:''}
+        </div>
+      </div>
+      <div class="deck-meta">
+        <span class="deck-chip">📝 ${total} thẻ</span>
+        <span class="deck-chip">${getMatureCount(d)} thuộc</span>
+      </div>
+      <div style="background:var(--cream-dk);border-radius:10px;height:6px;overflow:hidden;">
+        <div style="height:100%;width:${total?Math.round(getMatureCount(d)/total*100):0}%;background:${d.color||'var(--green)'};border-radius:10px;transition:width .4s;"></div>
+      </div>
+      <div class="deck-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-sm btn-ghost" onclick="navigate('deck-detail','${d.id}')">📝 Xem</button>
+        ${(due+newC)>0?`<button class="btn btn-sm btn-primary" onclick="state.currentDeckId='${d.id}';startStudy()">🎯 Học</button>`:'<button class="btn btn-sm btn-ghost" disabled style="opacity:.5">✅ Xong</button>'}
+        <button class="btn btn-sm btn-ghost" onclick="deleteDeck('${d.id}')" style="color:#e74c3c;margin-left:auto;">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterDecks() { renderDecks(); }
+
+function getDueCount(deck) {
+  return deck.cards.filter(c=>c.srs&&isDue(c)&&!isNewCard(c)).length;
+}
+function getNewCount(deck) {
+  const today = todayStr();
+  const todayNew = (state.stats.reviewHistory||[]).filter(r=>r.date===today&&r.deckId===deck.id&&r.isNew).length;
+  const remaining = Math.max(0, state.settings.newPerDay - todayNew);
+  return Math.min(deck.cards.filter(c=>isNewCard(c)).length, remaining);
+}
+function getMatureCount(deck) {
+  return deck.cards.filter(c=>c.srs?.stage==='mature').length;
+}
+
+function updateNavBadges() {
+  const total = state.decks.length;
+  document.getElementById('nav-decks').textContent = total;
+  const due = state.decks.reduce((a,d)=>a+getDueCount(d)+getNewCount(d),0);
+  document.getElementById('home-due').textContent = due;
+  document.getElementById('home-total').textContent = state.decks.reduce((a,d)=>a+d.cards.length,0);
+
+  const today = todayStr();
+  const doneCnt = (state.stats.reviewHistory||[]).filter(r=>r.date===today).length;
+  document.getElementById('home-done').textContent = doneCnt;
+
+  // Streak badge
+  document.getElementById('nav-streak').textContent = state.streak.current;
+  document.getElementById('topbar-streak').textContent = state.streak.current;
+  document.getElementById('home-streak').textContent = state.streak.current;
+}
+
+// ════════════════════════════════════════════════════════════
+// DECK DETAIL
+// ════════════════════════════════════════════════════════════
+function renderDeckDetail(id) {
+  const deck = state.decks.find(d=>d.id===id);
+  if(!deck) return;
+  document.getElementById('deck-detail-name').textContent = `${deck.emoji||'📚'} ${deck.name}`;
+  document.getElementById('deck-detail-desc').textContent = deck.desc||'Chưa có mô tả';
+
+  // Stats
+  const due=getDueCount(deck), newC=getNewCount(deck), total=deck.cards.length, mature=getMatureCount(deck);
+  document.getElementById('deck-detail-stats').innerHTML=`
+    <div class="stat-tile"><div class="label">📝 Tổng thẻ</div><div class="value">${total}</div></div>
+    <div class="stat-tile"><div class="label">✨ Thẻ mới</div><div class="value">${newC}</div></div>
+    <div class="stat-tile"><div class="label">📅 Cần ôn</div><div class="value">${due}</div></div>
+    <div class="stat-tile"><div class="label">🏆 Thuộc lòng</div><div class="value">${mature}</div></div>`;
+
+  renderWordList(deck);
+  renderDeckProgress(deck);
+
+  // Switch back to words tab
+  switchDeckTab('words', document.querySelector('.sub-tab'));
+}
+
+function switchDeckTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('deck-tab-'+tab)?.classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+function renderWordList(deck) {
+  const search = document.getElementById('word-search')?.value?.toLowerCase()||'';
+  const list = document.getElementById('word-list');
+  const cards = deck.cards.filter(c=>!search||c.front.word.toLowerCase().includes(search)||c.back.meaning.toLowerCase().includes(search));
+
+  if(!cards.length){
+    list.innerHTML=`<div class="empty-state"><div class="icon">🃏</div><div class="title">Chưa có thẻ nào</div><p>Thêm thẻ đầu tiên để bắt đầu học!</p></div>`;
+    return;
+  }
+
+  list.innerHTML = cards.map(c=>{
+    const st=c.srs?.stage||'new';
+    const tagCls={'new':'tag-new','learn':'tag-learn','review':'tag-review','mature':'tag-mature'}[st]||'tag-new';
+    const tagTxt={'new':'Mới','learn':'Đang học','review':'Ôn tập','mature':'Thuộc lòng'}[st];
+    const dueStr=c.srs?.dueDate?new Date(c.srs.dueDate).toLocaleDateString('vi-VN',{day:'numeric',month:'short'}):'—';
+    return `<div class="word-row">
+      <div class="word">${c.front.word}</div>
+      <div style="font-size:12px;color:var(--muted);min-width:100px;">${c.front.phonetic||''}</div>
+      <div class="meaning">${c.back.meaning}</div>
+      <span class="srs-tag ${tagCls}">${tagTxt}</span>
+      <span style="font-size:11px;color:var(--muted);min-width:60px;text-align:right;">📅 ${dueStr}</span>
+      <div style="display:flex;gap:4px;margin-left:8px;">
+        <button class="btn btn-sm btn-ghost btn-icon" title="Sửa" onclick="openEditCard('${deck.id}','${c.id}')">✏️</button>
+        <button class="btn btn-sm btn-ghost btn-icon" title="Xóa" onclick="deleteCard('${deck.id}','${c.id}')" style="color:#e74c3c;">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterWords() {
+  const deck = state.decks.find(d=>d.id===state.currentDeckId);
+  if(deck) renderWordList(deck);
+}
+
+function renderDeckProgress(deck) {
+  const el = document.getElementById('deck-progress-content');
+  if(!el) return;
+  const total=deck.cards.length;
+  if(!total){ el.innerHTML='<div class="empty-state"><div class="icon">📊</div><p>Thêm thẻ để theo dõi tiến độ</p></div>'; return; }
+
+  const dist = { new:0, learn:0, review:0, mature:0 };
+  deck.cards.forEach(c=>{ dist[c.srs?.stage||'new']++; });
+  const pct = k=>total?Math.round(dist[k]/total*100):0;
+
+  el.innerHTML=`
+    <div class="card card-lg">
+      <div style="font-weight:700;font-size:16px;color:var(--brown);margin-bottom:18px;">📊 Phân bổ trạng thái thẻ</div>
+      ${[['new','Mới','#66bb6a'],['learn','Đang học','#ffa726'],['review','Ôn tập','#42a5f5'],['mature','Thuộc lòng','var(--green)']].map(([k,lbl,col])=>`
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+          <span style="font-weight:600;color:var(--brown);">${lbl}</span>
+          <span style="color:var(--muted);">${dist[k]} thẻ (${pct(k)}%)</span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct(k)}%;background:${col};"></div></div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// CARD CRUD
+// ════════════════════════════════════════════════════════════
+function addCard() {
+  const deck = state.decks.find(d=>d.id===state.currentDeckId);
+  if(!deck){ toast('Không tìm thấy deck','error'); return; }
+  const word = document.getElementById('front-word').value.trim();
+  const meaning = document.getElementById('back-meaning').value.trim();
+  if(!word||!meaning){ toast('Vui lòng nhập từ và nghĩa','error'); return; }
+
+  const card = {
+    id: Date.now().toString()+Math.random().toString(36).slice(2),
+    front: {
+      word, phonetic: document.getElementById('front-phonetic').value.trim(),
+      image: document.getElementById('front-image').value.trim(),
+      audio: document.getElementById('front-audio').value.trim()
+    },
+    back: {
+      meaning, example: document.getElementById('back-example').value.trim(),
+      image: document.getElementById('back-image').value.trim(),
+      audio: document.getElementById('back-audio').value.trim()
+    },
+    notes: document.getElementById('card-notes').value.trim(),
+    srs: null, created: Date.now()
+  };
+
+  deck.cards.push(card);
+  saveState();
+  clearCardForm();
+  renderDeckDetail(state.currentDeckId);
+  toast(`✅ Đã thêm "${word}"`, 'success');
+}
+
+function clearCardForm() {
+  ['front-word','front-phonetic','front-image','front-audio','back-meaning','back-example','back-image','back-audio','card-notes'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('front-img-preview').style.display='none';
+  document.getElementById('back-img-preview').style.display='none';
+}
+
+function previewImage(side) {
+  const url = document.getElementById(`${side}-image`).value.trim();
+  const img = document.getElementById(`${side}-img-preview`);
+  if(url){ img.src=url; img.style.display='block'; img.onerror=()=>img.style.display='none'; }
+  else img.style.display='none';
+}
+function previewEditImage(side) {
+  const url = document.getElementById(`edit-${side}-image`).value.trim();
+  const img = document.getElementById(`edit-${side}-img-preview`);
+  if(url){ img.src=url; img.style.display='block'; img.onerror=()=>img.style.display='none'; }
+  else img.style.display='none';
+}
+
+function handleImageUpload(e, side) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById(`${side}-image`).value = ev.target.result;
+    previewImage(side);
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleAudioUpload(e, side) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { document.getElementById(`${side}-audio`).value = ev.target.result; };
+  reader.readAsDataURL(file);
+}
+
+function openEditCard(deckId, cardId) {
+  const deck = state.decks.find(d=>d.id===deckId);
+  const card = deck?.cards.find(c=>c.id===cardId);
+  if(!card) return;
+  state.editingCardId = cardId;
+
+  document.getElementById('edit-front-word').value = card.front.word||'';
+  document.getElementById('edit-front-phonetic').value = card.front.phonetic||'';
+  document.getElementById('edit-front-image').value = card.front.image||'';
+  document.getElementById('edit-front-audio').value = card.front.audio||'';
+  document.getElementById('edit-back-meaning').value = card.back.meaning||'';
+  document.getElementById('edit-back-example').value = card.back.example||'';
+  document.getElementById('edit-back-image').value = card.back.image||'';
+  document.getElementById('edit-back-audio').value = card.back.audio||'';
+  document.getElementById('edit-notes').value = card.notes||'';
+
+  previewEditImage('front');
+  previewEditImage('back');
+  openModal('modal-edit-card');
+}
+
+function saveEditCard() {
+  const deck = state.decks.find(d=>d.id===state.currentDeckId);
+  const card = deck?.cards.find(c=>c.id===state.editingCardId);
+  if(!card) return;
+
+  card.front.word      = document.getElementById('edit-front-word').value.trim();
+  card.front.phonetic  = document.getElementById('edit-front-phonetic').value.trim();
+  card.front.image     = document.getElementById('edit-front-image').value.trim();
+  card.front.audio     = document.getElementById('edit-front-audio').value.trim();
+  card.back.meaning    = document.getElementById('edit-back-meaning').value.trim();
+  card.back.example    = document.getElementById('edit-back-example').value.trim();
+  card.back.image      = document.getElementById('edit-back-image').value.trim();
+  card.back.audio      = document.getElementById('edit-back-audio').value.trim();
+  card.notes           = document.getElementById('edit-notes').value.trim();
+
+  saveState(); closeModal('modal-edit-card');
+  renderDeckDetail(state.currentDeckId);
+  toast('✅ Đã cập nhật thẻ','success');
+}
+
+function deleteCard(deckId, cardId) {
+  showConfirm('Xóa thẻ', 'Bạn có chắc muốn xóa thẻ này không?', ()=>{
+    const deck = state.decks.find(d=>d.id===deckId);
+    if(deck){ deck.cards=deck.cards.filter(c=>c.id!==cardId); saveState(); renderDeckDetail(state.currentDeckId); toast('🗑️ Đã xóa thẻ'); }
+  });
+}
+
+// Import CSV (word,meaning format)
+function importWords() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.csv,.txt';
+  input.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const lines = ev.target.result.split('\n');
+      const deck = state.decks.find(d=>d.id===state.currentDeckId);
+      if(!deck) return;
+      let count=0;
+      lines.forEach(line=>{
+        const parts=line.split(',');
+        if(parts.length>=2&&parts[0].trim()&&parts[1].trim()){
+          deck.cards.push({
+            id:Date.now().toString()+Math.random().toString(36).slice(2),
+            front:{word:parts[0].trim(),phonetic:parts[2]?.trim()||'',image:'',audio:''},
+            back:{meaning:parts[1].trim(),example:'',image:'',audio:''},
+            notes:'',srs:null,created:Date.now()
+          });
+          count++;
+        }
+      });
+      saveState(); renderDeckDetail(state.currentDeckId);
+      toast(`✅ Đã import ${count} từ vựng`,'success');
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ════════════════════════════════════════════════════════════
+// STUDY SESSION
+// ════════════════════════════════════════════════════════════
+let studyQueue = [];
+let studyIdx = 0;
+let studyDeckId = null;
+let studyFlipped = false;
+let studyCounts = {again:0,hard:0,good:0,easy:0};
+let studyStartTime = 0;
+
+function startStudy() {
+  const id = state.currentDeckId;
+  const deck = state.decks.find(d=>d.id===id);
+  if(!deck){ toast('Không tìm thấy deck','error'); return; }
+
+  // Build queue: new cards first, then due review cards
+  const newCards = deck.cards.filter(c=>isNewCard(c)).slice(0, state.settings.newPerDay);
+  const dueCards = deck.cards.filter(c=>!isNewCard(c)&&isDue(c));
+  studyQueue = [...newCards, ...dueCards].sort(()=>Math.random()-.5);
+
+  if(!studyQueue.length){ toast('Không có thẻ nào cần học hôm nay! 🎉','success'); return; }
+
+  studyIdx=0; studyDeckId=id; studyFlipped=false;
+  studyCounts={again:0,hard:0,good:0,easy:0};
+  studyStartTime=Date.now();
+
+  document.getElementById('study-deck-name').textContent = `${deck.emoji||'📚'} ${deck.name}`;
+  document.getElementById('study-overlay').classList.add('open');
+  document.getElementById('study-complete').style.display='none';
+  document.getElementById('fc-scene').style.display='block';
+  document.getElementById('rating-area').style.display='none';
+  document.getElementById('study-hint').style.display='block';
+  renderStudyCard();
+}
+
+function startQuickStudy() {
+  // Find deck with most due cards
+  let best=null, bestCount=0;
+  state.decks.forEach(d=>{
+    const c=getDueCount(d)+getNewCount(d);
+    if(c>bestCount){bestCount=c;best=d;}
+  });
+  if(!best){ toast('Không có gì cần ôn tập!','success'); return; }
+  state.currentDeckId=best.id; startStudy();
+}
+
+function renderStudyCard() {
+  if(studyIdx>=studyQueue.length){ showStudyComplete(); return; }
+  const card = studyQueue[studyIdx];
+  studyFlipped=false;
+  document.getElementById('fc-card').classList.remove('flipped');
+  document.getElementById('rating-area').style.display='none';
+  document.getElementById('study-hint').textContent='Nhấn vào thẻ để lật ↑';
+  document.getElementById('study-hint').style.display='block';
+
+  // Front
+  document.getElementById('fc-front-word').textContent = card.front.word||'';
+  document.getElementById('fc-front-phonetic').textContent = card.front.phonetic||'';
+  const fi=document.getElementById('fc-front-img');
+  if(card.front.image){ fi.src=card.front.image; fi.style.display='block'; fi.onerror=()=>fi.style.display='none'; }
+  else fi.style.display='none';
+  document.getElementById('fc-front-audio-btn').style.display = card.front.audio?'block':'none';
+
+  // Back
+  document.getElementById('fc-back-word').textContent = card.front.word||'';
+  document.getElementById('fc-back-phonetic').textContent = card.front.phonetic||'';
+  document.getElementById('fc-back-meaning').textContent = card.back.meaning||'';
+  document.getElementById('fc-back-example').textContent = card.back.example?`"${card.back.example}"`:'';
+  const bi=document.getElementById('fc-back-img');
+  if(card.back.image){ bi.src=card.back.image; bi.style.display='block'; bi.onerror=()=>bi.style.display='none'; }
+  else bi.style.display='none';
+  document.getElementById('fc-back-audio-btn').style.display = card.back.audio?'block':'none';
+
+  // Next labels
+  document.getElementById('next-again').textContent='< 1p';
+  document.getElementById('next-hard').textContent='< 6p';
+  document.getElementById('next-good').textContent=getNextLabel(card,2);
+  document.getElementById('next-easy').textContent=getNextLabel(card,3);
+
+  // Progress
+  const prog = studyIdx/studyQueue.length*100;
+  document.getElementById('study-prog-fill').style.width=prog+'%';
+  document.getElementById('study-counter').textContent=`${studyIdx} / ${studyQueue.length}`;
+
+  updateStudyCounts();
+}
+
+function flipCard() {
+  if(studyIdx>=studyQueue.length) return;
+  studyFlipped=!studyFlipped;
+  document.getElementById('fc-card').classList.toggle('flipped',studyFlipped);
+  if(studyFlipped){
+    document.getElementById('rating-area').style.display='block';
+    document.getElementById('study-hint').style.display='none';
+  } else {
+    document.getElementById('rating-area').style.display='none';
+    document.getElementById('study-hint').textContent='Nhấn vào thẻ để lật ↑';
+    document.getElementById('study-hint').style.display='block';
+  }
+}
+
+function rateCard(grade) {
+  const card = studyQueue[studyIdx];
+  const deck = state.decks.find(d=>d.id===studyDeckId);
+  if(!deck||!card) return;
+
+  const realCard = deck.cards.find(c=>c.id===card.id);
+  if(realCard){ realCard.srs = sm2Review(realCard, grade); }
+
+  // Record in stats
+  const today=todayStr();
+  if(!state.stats.reviewHistory) state.stats.reviewHistory=[];
+  state.stats.reviewHistory.push({ date:today, deckId:studyDeckId, cardId:card.id, grade, isNew:!card.srs, ts:Date.now() });
+  if(state.stats.reviewHistory.length>5000) state.stats.reviewHistory=state.stats.reviewHistory.slice(-5000);
+
+  // If again: re-add to queue later
+  if(grade===0){ studyQueue.push({...card, srs: realCard?.srs }); }
+
+  studyCounts[['again','hard','good','easy'][grade]]++;
+  studyIdx++;
+  saveState();
+  updateNavBadges();
+
+  // Flip back before showing next
+  document.getElementById('fc-card').classList.remove('flipped');
+  studyFlipped=false;
+  document.getElementById('rating-area').style.display='none';
+
+  setTimeout(()=>renderStudyCard(), 300);
+  recordStudyDay();
+}
+
+function updateStudyCounts(){
+  document.getElementById('study-count-again').textContent=studyCounts.again;
+  document.getElementById('study-count-hard').textContent=studyCounts.hard;
+  document.getElementById('study-count-good').textContent=studyCounts.good;
+  document.getElementById('study-count-easy').textContent=studyCounts.easy;
+}
+
+function showStudyComplete() {
+  const mins = Math.round((Date.now()-studyStartTime)/60000);
+  document.getElementById('fc-scene').style.display='none';
+  document.getElementById('rating-area').style.display='none';
+  document.getElementById('study-hint').style.display='none';
+  document.getElementById('study-complete').style.display='block';
+
+  const total=studyCounts.again+studyCounts.hard+studyCounts.good+studyCounts.easy;
+  const acc=total?Math.round((studyCounts.good+studyCounts.easy)/total*100):0;
+
+  document.getElementById('study-complete-msg').textContent=`Bạn đã hoàn thành ${total} thẻ trong ${mins||1} phút với độ chính xác ${acc}%.`;
+  document.getElementById('study-complete-stats').innerHTML=`
+    <div class="stat-tile"><div class="label">⏱️ Thời gian</div><div class="value">${mins||'<1'}</div><div class="sub">phút</div></div>
+    <div class="stat-tile"><div class="label">🎯 Chính xác</div><div class="value">${acc}%</div><div class="sub">tốt+dễ</div></div>
+    <div class="stat-tile"><div class="label">✅ Đã ôn</div><div class="value">${total}</div><div class="sub">thẻ</div></div>
+    <div class="stat-tile"><div class="label">✗ Lại</div><div class="value">${studyCounts.again}</div><div class="sub">thẻ</div></div>`;
+
+  document.getElementById('study-prog-fill').style.width='100%';
+  if(mins>0) saveSession(mins);
+  toast('🎉 Học xong rồi!','success');
+}
+
+function closeStudy() {
+  document.getElementById('study-overlay').classList.remove('open');
+  if(state.currentDeckId) renderDeckDetail(state.currentDeckId);
+  renderHome(); updateNavBadges();
+}
+
+function playAudio(side) {
+  const card = studyQueue[studyIdx];
+  if(!card) return;
+  const url = side==='front'?card.front.audio:card.back.audio;
+  if(url){ const audio=new Audio(url); audio.play().catch(()=>toast('Không thể phát âm thanh','error')); }
+}
+
+// ════════════════════════════════════════════════════════════
+// STATS PAGE
+// ════════════════════════════════════════════════════════════
+let statsPeriod = 'week';
+
+function setStatsPeriod(p, btn) {
+  statsPeriod=p;
+  document.querySelectorAll('#page-stats .btn-sm').forEach(b=>{ b.classList.remove('btn-primary'); b.classList.add('btn-ghost'); });
+  btn.classList.add('btn-primary'); btn.classList.remove('btn-ghost');
+  renderStats(p);
+}
+
+function renderStats(period) {
+  const history = state.stats.reviewHistory||[];
+  const today=todayStr();
+  const now=Date.now();
+
+  let filterFn;
+  if(period==='week'){
+    const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-7);
+    filterFn=r=>new Date(r.date)>=cutoff;
+  } else if(period==='month'){
+    const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-30);
+    filterFn=r=>new Date(r.date)>=cutoff;
+  } else { filterFn=()=>true; }
+
+  const filtered=history.filter(filterFn);
+  const totalReviews=filtered.length;
+  const goodEasy=filtered.filter(r=>r.grade>=2).length;
+  const acc=totalReviews?Math.round(goodEasy/totalReviews*100):0;
+  const newWords=filtered.filter(r=>r.isNew).length;
+  const days=[...new Set(filtered.map(r=>r.date))].length;
+
+  // Tiles
+  document.getElementById('stats-tiles').innerHTML=`
+    <div class="stat-tile"><div class="label">📝 Tổng lượt ôn</div><div class="value">${totalReviews}</div></div>
+    <div class="stat-tile"><div class="label">🎯 Độ chính xác</div><div class="value">${acc}%</div></div>
+    <div class="stat-tile"><div class="label">✨ Từ mới học</div><div class="value">${newWords}</div></div>
+    <div class="stat-tile"><div class="label">📅 Ngày hoạt động</div><div class="value">${days}</div></div>`;
+
+  // Daily chart
+  renderStatsDailyChart(period);
+
+  // Accuracy chart
+  renderAccuracyChart(filtered);
+
+  // SRS dist
+  renderSrsDist();
+
+  // Heatmap
+  renderHeatmap();
+
+  // Hard words
+  renderHardWords(history);
+}
+
+function renderStatsDailyChart(period) {
+  const chart=document.getElementById('stats-daily-chart');
+  const history=state.stats.reviewHistory||[];
+  const days=period==='week'?7:period==='month'?30:14;
+  const labels=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    labels.push(d.toISOString().slice(0,10));
+  }
+  const byDay=labels.map(d=>({ label:new Date(d+'T00:00:00').toLocaleDateString('vi-VN',{day:'numeric',month:'numeric'}), val:history.filter(r=>r.date===d).length }));
+  const max=Math.max(...byDay.map(d=>d.val),1);
+  chart.innerHTML=byDay.map(d=>`
+    <div class="bar-wrap">
+      <div class="bar-val" style="font-size:9px;">${d.val||''}</div>
+      <div class="bar" style="height:${Math.max(d.val/max*100,4)}%;"></div>
+      <div class="bar-label" style="font-size:9px;">${d.label}</div>
+    </div>`).join('');
+}
+
+function renderAccuracyChart(filtered) {
+  const el=document.getElementById('stats-accuracy-chart');
+  const grades=[['✗ Không nhớ',filtered.filter(r=>r.grade===0).length,'#e74c3c'],['~ Khó',filtered.filter(r=>r.grade===1).length,'#e67e22'],['✓ Tốt',filtered.filter(r=>r.grade===2).length,'var(--green)'],['⚡ Dễ',filtered.filter(r=>r.grade===3).length,'var(--brown)']];
+  const total=filtered.length||1;
+  el.innerHTML=grades.map(([lbl,cnt,col])=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+        <span style="font-weight:600;">${lbl}</span>
+        <span style="color:var(--muted);">${cnt} (${Math.round(cnt/total*100)}%)</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" style="width:${Math.round(cnt/total*100)}%;background:${col};"></div></div>
+    </div>`).join('');
+}
+
+function renderSrsDist() {
+  const el=document.getElementById('stats-srs-dist');
+  const all=state.decks.flatMap(d=>d.cards);
+  const dist={new:0,learn:0,review:0,mature:0};
+  all.forEach(c=>dist[c.srs?.stage||'new']++);
+  const total=all.length||1;
+  const items=[['new','Mới','#66bb6a'],['learn','Đang học','#ffa726'],['review','Ôn tập','#42a5f5'],['mature','Thuộc lòng','var(--green)']];
+  el.innerHTML=items.map(([k,lbl,col])=>`
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+        <span style="font-weight:600;">${lbl}</span>
+        <span style="color:var(--muted);">${dist[k]} từ</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar" style="width:${Math.round(dist[k]/total*100)}%;background:${col};"></div></div>
+    </div>`).join('');
+}
+
+function renderHeatmap() {
+  const el=document.getElementById('stats-heatmap');
+  const history=state.stats.reviewHistory||[];
+  const today=new Date();
+  const cells=[];
+  for(let i=89;i>=0;i--){
+    const d=new Date(today); d.setDate(d.getDate()-i);
+    const str=d.toISOString().slice(0,10);
+    const cnt=history.filter(r=>r.date===str).length;
+    const lv=cnt===0?'':cnt<5?'l1':cnt<15?'l2':cnt<30?'l3':'l4';
+    cells.push(`<div class="hm-cell ${lv}" title="${str}: ${cnt} thẻ"></div>`);
+  }
+  el.innerHTML=cells.join('');
+}
+
+function renderHardWords(history) {
+  const el=document.getElementById('stats-hard-words');
+  const failMap={};
+  history.filter(r=>r.grade===0).forEach(r=>{ failMap[r.cardId]=(failMap[r.cardId]||0)+1; });
+  const sorted=Object.entries(failMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(!sorted.length){ el.innerHTML='<div style="color:var(--muted);font-size:14px;padding:12px;">Chưa có dữ liệu</div>'; return; }
+
+  el.innerHTML=sorted.map(([cid,cnt])=>{
+    const card=state.decks.flatMap(d=>d.cards).find(c=>c.id===cid);
+    if(!card) return '';
+    return `<div class="word-row">
+      <div class="word">${card.front.word}</div>
+      <div class="meaning">${card.back.meaning}</div>
+      <span style="color:#e74c3c;font-weight:700;font-size:13px;">✗ ${cnt} lần</span>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// HOME PAGE
+// ════════════════════════════════════════════════════════════
+function renderHome() {
+  updateTopbar();
+  updateNavBadges();
+  renderWeekBar('home-week-bar','home-week-labels');
+
+  // Deck list
+  const el=document.getElementById('home-deck-list');
+  const dueDecks=state.decks.filter(d=>getDueCount(d)+getNewCount(d)>0).slice(0,4);
+  if(!dueDecks.length){
+    el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">🎉 Không có gì cần ôn tập!</div>`;
+  } else {
+    el.innerHTML=dueDecks.map(d=>{
+      const due=getDueCount(d), newC=getNewCount(d);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;cursor:pointer;transition:background .15s;" onclick="navigate('deck-detail','${d.id}')" onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='transparent'">
+        <span style="font-size:22px;">${d.emoji||'📚'}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;color:var(--brown);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.name}</div>
+          <div style="font-size:11px;color:var(--muted);">${due?due+' ôn':''}${due&&newC?' • ':''}${newC?newC+' mới':''}</div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();state.currentDeckId='${d.id}';startStudy()">Học</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Timer stats
+  const today=todayStr();
+  const weekDates=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);weekDates.push(d.toISOString().slice(0,10));}
+  const todayMins=state.sessions.filter(s=>s.date===today).reduce((a,b)=>a+b.minutes,0);
+  const weekMins=state.sessions.filter(s=>weekDates.includes(s.date)).reduce((a,b)=>a+b.minutes,0);
+  document.getElementById('home-time-today').textContent=todayMins+' phút';
+  document.getElementById('home-time-week').textContent=weekMins+' phút';
+}
+
+// ════════════════════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════════════════════
+function renderSettings() {
+  const s=state.settings;
+  document.getElementById('setting-new-per-day').value=s.newPerDay||20;
+  document.getElementById('setting-review-per-day').value=s.reviewPerDay||100;
+  document.getElementById('setting-daily-goal').value=s.dailyGoal||30;
+  document.getElementById('setting-name').value=s.userName||'';
+  document.getElementById('setting-reminder').checked=s.reminder||false;
+  document.getElementById('setting-reminder-time').value=s.reminderTime||'20:00';
+  updateToggleThumb();
+}
+
+function saveSetting(key,val) {
+  if(key==='newPerDay'||key==='reviewPerDay'||key==='dailyGoal') val=parseInt(val)||0;
+  state.settings[key]=val;
+  saveState();
+  updateToggleThumb();
+  if(key==='userName') updateTopbar();
+  toast('✅ Đã lưu cài đặt','success');
+}
+
+function updateToggleThumb(){
+  const thumb=document.getElementById('toggle-thumb');
+  if(thumb) thumb.style.background=state.settings.reminder?'var(--green)':'var(--cream-dk)';
+}
+
+function exportData() {
+  const data=JSON.stringify({decks:state.decks,streak:state.streak,sessions:state.sessions,stats:state.stats,settings:state.settings},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`vocabcore_backup_${todayStr()}.json`; a.click();
+  URL.revokeObjectURL(url);
+  toast('📤 Đã xuất dữ liệu','success');
+}
+
+function importData(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.decks) state.decks=data.decks;
+      if(data.streak) state.streak=data.streak;
+      if(data.sessions) state.sessions=data.sessions;
+      if(data.stats) state.stats=data.stats;
+      if(data.settings) state.settings=data.settings;
+      saveState(); renderHome(); updateNavBadges();
+      toast('✅ Đã nhập dữ liệu thành công','success');
+    }catch(err){ toast('❌ File không hợp lệ','error'); }
+  };
+  reader.readAsText(file);
+}
+
+function confirmReset() {
+  showConfirm('⚠️ Xóa tất cả dữ liệu', 'Hành động này không thể hoàn tác! Tất cả deck, thẻ và lịch sử học tập sẽ bị xóa vĩnh viễn.', ()=>{
+    ['vc_decks','vc_streak','vc_sessions','vc_settings','vc_stats'].forEach(k=>localStorage.removeItem(k));
+    location.reload();
+  });
+}
+
+function showConfirm(title, msg, onOk) {
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  const btn=document.getElementById('confirm-ok-btn');
+  btn.onclick=()=>{ closeModal('modal-confirm'); onOk(); };
+  openModal('modal-confirm');
+}
+
+// ════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  const overlay=document.getElementById('study-overlay');
+  if(!overlay.classList.contains('open')) return;
+  if(e.key===' '||e.key==='ArrowUp'||e.key==='ArrowDown') { e.preventDefault(); flipCard(); }
+  if(studyFlipped){
+    if(e.key==='1') rateCard(0);
+    if(e.key==='2') rateCard(1);
+    if(e.key==='3') rateCard(2);
+    if(e.key==='4') rateCard(3);
+  }
+  if(e.key==='Escape') closeStudy();
+});
+
+// ════════════════════════════════════════════════════════════
+// SAMPLE DATA (for first run)
+// ════════════════════════════════════════════════════════════
+function seedSampleData() {
+  if(state.decks.length>0) return;
+
+  const sampleDeck = {
+    id:'sample1', name:'IELTS Vocabulary', desc:'Từ vựng IELTS phổ biến Band 6.0+',
+    emoji:'🎓', color:'#809671', created:Date.now(),
+    cards:[
+      {id:'c1',front:{word:'Ubiquitous',phonetic:'/juːˈbɪk.wɪ.təs/',image:'',audio:''},back:{meaning:'Có mặt khắp nơi; phổ biến rộng rãi',example:'Smartphones have become ubiquitous in modern society.',image:'',audio:''},notes:'adj - formal',srs:null,created:Date.now()},
+      {id:'c2',front:{word:'Ephemeral',phonetic:'/ɪˈfem.ər.əl/',image:'',audio:''},back:{meaning:'Tồn tại trong thời gian ngắn; thoáng qua',example:'Fame can be ephemeral in the world of social media.',image:'',audio:''},notes:'adj',srs:null,created:Date.now()},
+      {id:'c3',front:{word:'Ameliorate',phonetic:'/əˈmiː.li.ə.reɪt/',image:'',audio:''},back:{meaning:'Cải thiện; làm cho tốt hơn',example:'The government took steps to ameliorate the situation.',image:'',audio:''},notes:'verb - formal',srs:{interval:4,easeFactor:2.5,repetitions:2,lapses:0,lastReview:Date.now()-3*86400000,dueDate:Date.now()+86400000,stage:'review'},created:Date.now()},
+      {id:'c4',front:{word:'Pragmatic',phonetic:'/præɡˈmæt.ɪk/',image:'',audio:''},back:{meaning:'Thực dụng; thực tế',example:'We need a pragmatic approach to solve this problem.',image:'',audio:''},notes:'adj',srs:{interval:21,easeFactor:2.8,repetitions:5,lapses:0,lastReview:Date.now()-7*86400000,dueDate:Date.now()-86400000,stage:'mature'},created:Date.now()},
+      {id:'c5',front:{word:'Resilient',phonetic:'/rɪˈzɪl.i.ənt/',image:'',audio:''},back:{meaning:'Kiên cường; có khả năng phục hồi nhanh',example:'Children are often more resilient than adults expect.',image:'',audio:''},notes:'adj',srs:null,created:Date.now()},
+      {id:'c6',front:{word:'Ambiguous',phonetic:'/æmˈbɪɡ.ju.əs/',image:'',audio:''},back:{meaning:'Mơ hồ; có nhiều nghĩa',example:'The contract contained some ambiguous clauses.',image:'',audio:''},notes:'adj',srs:{interval:1,easeFactor:2.2,repetitions:1,lapses:2,lastReview:Date.now()-86400000,dueDate:Date.now(),stage:'learn'},created:Date.now()},
+    ]
+  };
+
+  const deck2 = {
+    id:'sample2', name:'Tiếng Anh giao tiếp', desc:'Cụm từ và thành ngữ thông dụng',
+    emoji:'💬', color:'#725C3A', created:Date.now(),
+    cards:[
+      {id:'c7',front:{word:'Break the ice',phonetic:'',image:'',audio:''},back:{meaning:'Phá vỡ sự im lặng ban đầu; tạo không khí thân thiện',example:'He told a joke to break the ice at the meeting.',image:'',audio:''},notes:'idiom',srs:null,created:Date.now()},
+      {id:'c8',front:{word:'Hit the nail on the head',phonetic:'',image:'',audio:''},back:{meaning:'Nói đúng vấn đề; chỉ ra đúng điểm mấu chốt',example:'You hit the nail on the head with that comment.',image:'',audio:''},notes:'idiom',srs:null,created:Date.now()},
+    ]
+  };
+
+  state.decks=[sampleDeck, deck2];
+  saveState();
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+function init() {
+  seedSampleData();
+  updateTopbar();
+  updateNavBadges();
+  renderHome();
+  renderStreak();
+
+  // Responsive sidebar
+  if(window.innerWidth < 768) {
+    sidebar.classList.add('collapsed');
+    main.classList.add('expanded');
+    sidebarOpen = false;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
