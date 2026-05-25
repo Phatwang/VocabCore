@@ -2,7 +2,10 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#4a3f2e" />
   <title>VocabCore – Spaced Repetition Vocabulary</title>
 
   <!-- ===== GOOGLE FONTS: K2D (hỗ trợ tiếng Việt) ===== -->
@@ -58,7 +61,10 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     /* ===== SCROLLBAR ===== */
@@ -70,10 +76,12 @@
     #navbar {
       background: var(--dark-card);
       color: #fff;
-      height: 48px;
+      height: calc(48px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
       display: flex;
       align-items: center;
-      padding: 0 20px;
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
       position: sticky;
       top: 0;
       z-index: 100;
@@ -93,14 +101,19 @@
     #navbar .nav-stat {
       background: rgba(255,255,255,.12);
       border-radius: 20px;
-      padding: 4px 12px;
-      font-size: .82rem;
+      padding: 4px 10px;
+      font-size: .8rem;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 5px;
       cursor: pointer;
       transition: background .2s;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
     }
     #navbar .nav-stat:hover { background: rgba(255,255,255,.2); }
 
@@ -109,21 +122,24 @@
       background: var(--secondary);
       display: flex;
       align-items: center;
-      padding: 0 20px;
+      padding: 0 max(12px, env(safe-area-inset-left)) 0 max(12px, env(safe-area-inset-right));
       border-bottom: 2px solid var(--border);
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      scroll-snap-type: x mandatory;
       position: sticky;
-      top: 48px;
+      top: calc(48px + env(safe-area-inset-top));
       z-index: 99;
+      -webkit-overflow-scrolling: touch;
     }
     #tabbar::-webkit-scrollbar { display: none; }
+    #tabbar { scrollbar-width: none; -ms-overflow-style: none; }
     .tab-btn {
       position: relative;
-      padding: 10px 16px;
+      padding: 12px 14px;
       font-family: 'K2D', sans-serif;
-      font-size: .88rem;
+      font-size: .85rem;
       font-weight: 600;
       color: var(--text-light);
       background: none;
@@ -135,7 +151,11 @@
       display: flex;
       align-items: center;
       gap: 5px;
+      scroll-snap-align: start;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
+    .tab-btn:active { transform: scale(0.95); opacity: 0.8; }
     .tab-btn.active {
       color: var(--primary-dark);
       border-bottom-color: var(--primary-dark);
@@ -330,6 +350,7 @@
       max-width: 520px;
       margin: 0 auto;
       height: 300px;
+      touch-action: manipulation;
     }
     .flashcard {
       width: 100%;
@@ -338,7 +359,10 @@
       transform-style: preserve-3d;
       transition: transform .55s cubic-bezier(.4,0,.2,1);
       cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
+    .flashcard:active { transform: scale(0.98); }
+    .flashcard.flipped:active { transform: rotateY(180deg) scale(0.98); }
     .flashcard.flipped { transform: rotateY(180deg); }
     .flashcard-face {
       position: absolute;
@@ -712,17 +736,77 @@
     }
     #toast.show { transform: translateX(-50%) translateY(0); }
 
-    /* ===== RESPONSIVE ===== */
+    /* ===== RESPONSIVE - MOBILE FIRST ===== */
+    @media (max-width: 1024px) {
+      #main-content { padding: 16px; }
+      .flashcard-scene { max-width: 420px; height: 280px; }
+    }
     @media (max-width: 768px) {
-      #main-content { padding: 16px 12px; }
-      .flashcard-scene { height: 240px; }
-      .flashcard-word { font-size: 1.5rem; }
-      .srs-btns { grid-template-columns: repeat(2,1fr); }
-      .auth-box { padding: 28px 20px; }
+      #navbar { height: 52px; padding: 0 12px; }
+      #navbar .logo { font-size: 1rem; }
+      #tabbar { top: 52px; padding: 0 8px; }
+      .tab-btn { padding: 10px 8px; font-size: .78rem; }
+      #main-content { padding: 12px; }
+      .flashcard-scene { height: 240px; max-width: 100%; }
+      .flashcard-word { font-size: 1.4rem; }
+      .flashcard-face { padding: 20px 16px; }
+      .srs-btns { grid-template-columns: repeat(2,1fr); gap: 6px; }
+      .srs-btn { padding: 10px 6px; font-size: .8rem; }
+      .streak-hero { padding: 30px 16px; }
+      .streak-hero .streak-num { font-size: 2.5rem; }
+      .streak-hero .star { font-size: 2.5rem; }
+      .big-stat .num { font-size: 1.6rem; }
+      .auth-box { padding: 28px 20px; margin: 10px; }
+      .modal-box { padding: 20px; max-width: 95vw; }
+      .resp-grid-1, .resp-grid-3 { grid-template-columns: 1fr !important; }
+      .deck-item { padding: 12px; }
+      .deck-icon { width: 36px; height: 36px; font-size: 1.1rem; }
     }
     @media (max-width: 480px) {
-      .tab-btn { padding: 10px 10px; font-size: .8rem; }
-      .big-stat .num { font-size: 1.8rem; }
+      #navbar .nav-stat { padding: 4px 8px; font-size: .75rem; }
+      .tab-btn { padding: 8px 6px; font-size: .72rem; }
+      .tab-btn span:not(.tab-dot) { display: none; }
+      .flashcard-word { font-size: 1.2rem; }
+      .timer-circle-wrap { width: 130px; height: 130px; }
+      .timer-text { font-size: 1rem; }
+      .btn-lg { padding: 10px 20px; font-size: .9rem; }
+      .cal-day { font-size: .7rem; border-radius: 6px; }
+      .heatmap-cell { width: 16px; height: 16px; }
+    }
+    /* iPad specific */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      #main-content { max-width: 960px; }
+      .flashcard-scene { max-width: 480px; height: 300px; }
+      .resp-grid-1 { grid-template-columns: 1fr 1fr; }
+      .resp-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    }
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      .btn, .tab-btn, .deck-item, .srs-btn { min-height: 44px; }
+      .form-input { min-height: 44px; }
+      .flashcard { cursor: default; }
+      .auth-box { margin: 0; border-radius: 0; }
+    }
+    
+    /* Tabbar scroll hint for mobile */
+    #tabbar::after {
+      content: '›';
+      position: fixed;
+      right: 10px;
+      top: 55px;
+      color: var(--text-light);
+      font-size: 1.5rem;
+      pointer-events: none;
+      opacity: 0.5;
+      animation: scrollHint 1.5s ease-in-out infinite;
+      display: none;
+    }
+    @media (max-width: 600px) {
+      #tabbar::after { display: block; }
+    }
+    @keyframes scrollHint {
+      0%, 100% { transform: translateX(0); opacity: 0.3; }
+      50% { transform: translateX(4px); opacity: 0.7; }
     }
 
     /* ===== ANIMATIONS ===== */
@@ -730,6 +814,10 @@
     .view.active { animation: fadeIn .25s ease; }
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
     .pulse { animation: pulse .6s ease; }
+    @keyframes confettiPop {
+      0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(150px) scale(0) rotate(360deg); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -1080,15 +1168,42 @@
 
       <!-- Drawing canvas -->
       <div id="draw-area" style="display:none;margin-top:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
           <span style="font-size:.85rem;font-weight:600;color:var(--text);">✍️ Luyện viết tay</span>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <input type="color" id="draw-color" value="#3d2e1a" style="width:28px;height:28px;border:none;cursor:pointer;border-radius:4px;" />
-            <input type="range" id="draw-size" min="1" max="20" value="3" style="width:70px;" />
-            <button class="btn btn-secondary btn-sm" onclick="clearCanvas()">🗑 Xóa</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="toggle-wrap" style="font-size:.8rem;">
+              <button class="toggle" id="toggle-trace" onclick="toggleTraceMode()"></button>
+              <span class="toggle-label"> Chế độ đồ theo mẫu</span>
+            </div>
+            <input type="color" id="draw-color" value="#3d2e1a" style="width:32px;height:32px;border:none;cursor:pointer;border-radius:6px;" title="Màu bút" />
+            <div style="display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--text-light);">
+              <span>Nét:</span>
+              <input type="range" id="draw-size" min="2" max="25" value="5" style="width:60px;" />
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="clearCanvas()"> Xóa</button>
+            <button class="btn btn-primary btn-sm" onclick="checkHandwriting()">✅ Kiểm tra</button>
           </div>
         </div>
-        <canvas id="draw-canvas" width="520" height="180"></canvas>
+        
+        <!-- Template display for trace mode -->
+        <div id="trace-template-wrap" style="display:none;text-align:center;margin-bottom:10px;">
+          <div style="font-size:.8rem;color:var(--text-light);margin-bottom:6px;"> Mẫu cần viết:</div>
+          <div id="trace-template" style="display:inline-block;padding:10px 20px;background:#fff;border:2px dashed var(--primary);border-radius:12px;font-size:2.5rem;font-weight:700;color:var(--primary-dark);letter-spacing:8px;"></div>
+        </div>
+        
+        <!-- Canvas container with overlay support -->
+        <div style="position:relative;display:inline-block;">
+          <canvas id="draw-canvas" width="520" height="200" style="border-radius:12px;border:2px solid var(--border);touch-action:none;cursor:crosshair;background:#fff;"></canvas>
+          <canvas id="draw-overlay" width="520" height="200" style="position:absolute;left:0;top:0;border-radius:12px;pointer-events:none;"></canvas>
+        </div>
+        
+        <!-- Feedback area -->
+        <div id="draw-feedback" style="display:none;margin-top:12px;padding:14px 18px;border-radius:12px;text-align:center;font-weight:700;font-size:1rem;"></div>
+        
+        <!-- Score display -->
+        <div id="draw-score" style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;font-size:.85rem;color:var(--text-light);">
+          <span>Độ chính xác: <strong id="accuracy-display" style="color:var(--primary);font-size:1rem;">--</strong></span>
+        </div>
       </div>
 
       <!-- SRS Buttons -->
@@ -2249,6 +2364,23 @@ function toggleDraw() {
   document.getElementById('toggle-draw').classList.toggle('on', drawMode);
 }
 
+function toggleTraceMode() {
+  traceMode = !traceMode;
+  document.getElementById('toggle-trace').classList.toggle('on', traceMode);
+  document.getElementById('trace-template-wrap').style.display = traceMode ? 'block' : 'none';
+  updateTraceTemplate();
+  clearCanvas();
+}
+
+let traceMode = false;
+let userStrokePoints = [];
+
+function updateTraceTemplate() {
+  const card = studyQueue[studyIdx];
+  const text = card?.front?.text || card?.back?.text || '';
+  document.getElementById('trace-template').textContent = text.slice(0, 10);
+}
+
 function checkDueDot() {
   const allCards = decks.flatMap(d => d.cards||[]);
   const due = allCards.some(c => !c.nextReview || new Date(c.nextReview) <= new Date());
@@ -2308,7 +2440,11 @@ function loadStudyCard() {
 
   // Draw canvas
   document.getElementById('draw-area').style.display = drawMode ? 'block' : 'none';
-  if (drawMode) { clearCanvas(); initCanvas(); }
+  if (drawMode) {
+    clearCanvas();
+    initCanvas();
+    if (traceMode) updateTraceTemplate();
+  }
 
   // Progress
   const total = studyQueue.length;
@@ -2420,20 +2556,47 @@ function playAudio(side) {
 }
 
 /* ================================================================
-   DRAWING CANVAS
+   DRAWING CANVAS - ENHANCED WITH FEEDBACK
 ================================================================ */
 function initCanvas() {
   const canvas = document.getElementById('draw-canvas');
-  // Set canvas width to match container
-  canvas.width = canvas.offsetWidth || 520;
+  const overlay = document.getElementById('draw-overlay');
+  
+  // Set canvas sizes
+  const containerWidth = canvas.parentElement?.offsetWidth || 520;
+  canvas.width = containerWidth;
+  canvas.height = 200;
+  if (overlay) {
+    overlay.width = containerWidth;
+    overlay.height = 200;
+  }
+  
   const ctx = canvas.getContext('2d');
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
+  ctx.strokeStyle = document.getElementById('draw-color').value;
+  ctx.lineWidth = parseInt(document.getElementById('draw-size').value);
+  
+  if (overlay) {
+    const octx = overlay.getContext('2d');
+    octx.lineJoin = 'round';
+    octx.lineCap = 'round';
+  }
 
-  // Remove old listeners by cloning
+  // Clone to remove old listeners
   const newCanvas = canvas.cloneNode(true);
   canvas.parentNode.replaceChild(newCanvas, canvas);
   newCanvas.id = 'draw-canvas';
+  
+  if (overlay) {
+    const newOverlay = overlay.cloneNode(true);
+    overlay.parentNode.replaceChild(newOverlay, overlay);
+    newOverlay.id = 'draw-overlay';
+  }
+
+  userStrokePoints = [];
+  hideDrawFeedback();
+  document.getElementById('accuracy-display').textContent = '--';
 
   function getPos(e) {
     const r = newCanvas.getBoundingClientRect();
@@ -2444,45 +2607,225 @@ function initCanvas() {
     return [(cx - r.left) * scaleX, (cy - r.top) * scaleY];
   }
 
-  newCanvas.addEventListener('mousedown', e => { isDrawing=true; [lastX,lastY]=getPos(e); });
-  newCanvas.addEventListener('mousemove', e => {
-    if (!isDrawing) return;
-    const c2 = newCanvas.getContext('2d');
-    c2.lineJoin='round'; c2.lineCap='round';
-    c2.strokeStyle = document.getElementById('draw-color').value;
-    c2.lineWidth = document.getElementById('draw-size').value;
-    c2.beginPath();
-    c2.moveTo(lastX, lastY);
-    const [x,y] = getPos(e);
-    c2.lineTo(x, y);
-    c2.stroke();
-    [lastX,lastY]=[x,y];
-  });
-  newCanvas.addEventListener('mouseup', () => isDrawing=false);
-  newCanvas.addEventListener('mouseleave', () => isDrawing=false);
+  function startDraw(e) {
+    isDrawing = true;
+    const [x, y] = getPos(e);
+    lastX = x;
+    lastY = y;
+    userStrokePoints.push([{x, y}]);
+    
+    // Draw overlay template if trace mode
+    if (traceMode) {
+      drawTraceTemplate();
+    }
+  }
 
-  newCanvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing=true; [lastX,lastY]=getPos(e); });
-  newCanvas.addEventListener('touchmove', e => {
-    e.preventDefault();
+  function moveDraw(e) {
     if (!isDrawing) return;
+    e.preventDefault();
+    
     const c2 = newCanvas.getContext('2d');
-    c2.lineJoin='round'; c2.lineCap='round';
+    c2.lineJoin = 'round';
+    c2.lineCap = 'round';
     c2.strokeStyle = document.getElementById('draw-color').value;
-    c2.lineWidth = document.getElementById('draw-size').value;
+    c2.lineWidth = parseInt(document.getElementById('draw-size').value);
+    
     c2.beginPath();
     c2.moveTo(lastX, lastY);
-    const [x,y] = getPos(e);
+    const [x, y] = getPos(e);
     c2.lineTo(x, y);
     c2.stroke();
-    [lastX,lastY]=[x,y];
-  });
-  newCanvas.addEventListener('touchend', () => isDrawing=false);
+    
+    // Track stroke points
+    const currentStroke = userStrokePoints[userStrokePoints.length - 1];
+    currentStroke.push({x, y});
+    
+    [lastX, lastY] = [x, y];
+  }
+
+  function endDraw() {
+    isDrawing = false;
+    userStrokePoints.push([]);
+  }
+
+  // Mouse events
+  newCanvas.addEventListener('mousedown', startDraw);
+  newCanvas.addEventListener('mousemove', moveDraw);
+  newCanvas.addEventListener('mouseup', endDraw);
+  newCanvas.addEventListener('mouseleave', endDraw);
+
+  // Touch events (optimized for mobile/iPad)
+  newCanvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e); }, { passive: false });
+  newCanvas.addEventListener('touchmove', e => { moveDraw(e); }, { passive: false });
+  newCanvas.addEventListener('touchend', e => { e.preventDefault(); endDraw(); }, { passive: false });
+  
+  // Update color/size on change
+  document.getElementById('draw-color').onchange = () => {
+    newCanvas.getContext('2d').strokeStyle = document.getElementById('draw-color').value;
+  };
+  document.getElementById('draw-size').oninput = () => {
+    newCanvas.getContext('2d').lineWidth = parseInt(document.getElementById('draw-size').value);
+  };
+}
+
+function drawTraceTemplate() {
+  const overlay = document.getElementById('draw-overlay');
+  if (!overlay) return;
+  const octx = overlay.getContext('2d');
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+  
+  const card = studyQueue[studyIdx];
+  const text = card?.front?.text || '';
+  if (!text) return;
+  
+  octx.font = 'bold 80px "K2D", sans-serif';
+  octx.fillStyle = 'rgba(128, 150, 113, 0.15)';
+  octx.textAlign = 'center';
+  octx.textBaseline = 'middle';
+  octx.fillText(text, overlay.width / 2, overlay.height / 2);
+  
+  // Draw stroke guides for CJK characters
+  if (/[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(text)) {
+    octx.strokeStyle = 'rgba(128, 150, 113, 0.4)';
+    octx.lineWidth = 2;
+    octx.setLineDash([5, 5]);
+    octx.strokeText(text, overlay.width / 2, overlay.height / 2);
+    octx.setLineDash([]);
+  }
 }
 
 function clearCanvas() {
   const canvas = document.getElementById('draw-canvas');
+  const overlay = document.getElementById('draw-overlay');
   if (!canvas) return;
-  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+  
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  if (overlay) overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+  
+  userStrokePoints = [];
+  hideDrawFeedback();
+  document.getElementById('accuracy-display').textContent = '--';
+}
+
+function checkHandwriting() {
+  const card = studyQueue[studyIdx];
+  const targetText = card?.front?.text || card?.back?.text || '';
+  
+  if (!targetText || userStrokePoints.length === 0) {
+    showDrawFeedback('Vui lòng viết gì đó trước!', 'warning');
+    return;
+  }
+  
+  // Simple heuristic: check stroke count and bounding box
+  const strokeCount = userStrokePoints.filter(s => s.length > 2).length;
+  const allPoints = userStrokePoints.flat();
+  
+  if (allPoints.length === 0) {
+    showDrawFeedback('Chưa có nét vẽ nào!', 'warning');
+    return;
+  }
+  
+  // Calculate bounding box
+  const minX = Math.min(...allPoints.map(p => p.x));
+  const maxX = Math.max(...allPoints.map(p => p.x));
+  const minY = Math.min(...allPoints.map(p => p.y));
+  const maxY = Math.max(...allPoints.map(p => p.y));
+  
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const canvas = document.getElementById('draw-canvas');
+  const coverage = (width * height) / (canvas.width * canvas.height);
+  
+  // Character type detection
+  const isCJK = /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(targetText);
+  const isLatin = /[a-zA-Z]/.test(targetText);
+  const charLength = targetText.trim().length;
+  
+  // Scoring logic
+  let score = 0;
+  
+  if (isCJK) {
+    // CJK characters need more strokes
+    const expectedStrokes = charLength * 8;
+    const strokeRatio = Math.min(strokeCount / expectedStrokes, 1.5);
+    const coverageScore = Math.min(coverage * 8, 1);
+    score = Math.round((strokeRatio * 0.6 + coverageScore * 0.4) * 100);
+  } else if (isLatin) {
+    // Latin letters - simpler
+    const expectedStrokes = charLength * 2;
+    const strokeRatio = Math.min(strokeCount / expectedStrokes, 1.5);
+    const coverageScore = Math.min(coverage * 15, 1);
+    score = Math.round((strokeRatio * 0.5 + coverageScore * 0.5) * 100);
+  } else {
+    // General text
+    score = Math.min(Math.round(coverage * 100 + strokeCount * 3), 100);
+  }
+  
+  // Clamp score
+  score = Math.max(0, Math.min(100, score));
+  
+  // Display score
+  document.getElementById('accuracy-display').textContent = score + '%';
+  
+  // Feedback based on score
+  if (score >= 80) {
+    showDrawFeedback(' Tuyệt vời! Chữ viết rất đẹp!', 'success');
+    triggerConfetti();
+  } else if (score >= 60) {
+    showDrawFeedback('👍 Tốt! Cố gắng thêm chút nữa.', 'good');
+  } else if (score >= 40) {
+    showDrawFeedback('✏️ Tạm được. Hãy viết chậm hơn và theo đúng nét.', 'neutral');
+  } else {
+    showDrawFeedback('💪 Cố gắng lên! Viết lại theo mẫu nhé.', 'retry');
+  }
+}
+
+function showDrawFeedback(msg, type) {
+  const fb = document.getElementById('draw-feedback');
+  fb.textContent = msg;
+  fb.style.display = 'block';
+  
+  const colors = {
+    success: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
+    good: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
+    neutral: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
+    warning: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' },
+    retry: { bg: '#f3e8ff', text: '#6b21a8', border: '#d8b4fe' }
+  };
+  
+  const c = colors[type] || colors.neutral;
+  fb.style.background = c.bg;
+  fb.style.color = c.text;
+  fb.style.border = '2px solid ' + c.border;
+  
+  fb.style.animation = 'none';
+  fb.offsetHeight;
+  fb.style.animation = 'fadeIn 0.3s ease';
+}
+
+function hideDrawFeedback() {
+  document.getElementById('draw-feedback').style.display = 'none';
+}
+
+function triggerConfetti() {
+  const colors = ['#809671', '#E5D2B8', '#725C3A', '#f59e0b', '#10b981'];
+  for (let i = 0; i < 30; i++) {
+    const particle = document.createElement('div');
+    particle.style.cssText = `
+      position:fixed;
+      left:${50 + (Math.random() - 0.5) * 40}%;
+      top:50%;
+      width:${8 + Math.random() * 8}px;
+      height:${8 + Math.random() * 8}px;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius:${Math.random() > 0.5 ? '50%' : '4px'};
+      pointer-events:none;
+      z-index:9999;
+      animation:confettiPop 0.8s ease-out forwards;
+    `;
+    document.body.appendChild(particle);
+    setTimeout(() => particle.remove(), 800);
+  }
 }
 
 /* ================================================================
